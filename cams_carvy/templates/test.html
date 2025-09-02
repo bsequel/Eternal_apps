@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAMS Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <style>
+        .icon-box { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 20px; }
+        .card-bottom-accent { height: 4px; }
+        .editable-isin { cursor: pointer; border-bottom: 1px dashed #007bff; padding: 2px 4px; border-radius: 3px; }
+        .editable-isin:hover { background-color: #e3f2fd; }
+        .editing { background-color: #fff3cd !important; border: 2px solid #ffc107 !important; padding: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-4">
+        <!-- Header -->
+        <h2 class="mb-4">
+            <span style="color: #7293F3;">CAMS Carvy <span class="text-info fs-5">Dashboard</span></span>
+        </h2>
+
+        <!-- Summary Cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card shadow border-0 rounded-4 overflow-hidden">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-secondary text-uppercase fw-semibold small">Total Entities</div>
+                                <h5 class="fw-bold text-dark mt-1 mb-0" id="card-entities">0</h5>
+                            </div>
+                            <span class="icon-box bg-info text-white"><i class="bi bi-people-fill"></i></span>
+                        </div>
+                    </div>
+                    <div class="card-bottom-accent bg-info"></div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow border-0 rounded-4 overflow-hidden">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-secondary text-uppercase fw-semibold small">Total Folios</div>
+                                <h5 class="fw-bold text-primary mt-1 mb-0" id="card-folios">0</h5>
+                            </div>
+                            <span class="icon-box bg-primary text-white"><i class="bi bi-collection-fill"></i></span>
+                        </div>
+                    </div>
+                    <div class="card-bottom-accent bg-primary"></div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow border-0 rounded-4 overflow-hidden">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-secondary text-uppercase fw-semibold small">Market Value</div>
+                                <h5 class="fw-bold text-success mt-1 mb-0" id="card-market-value">₹0</h5>
+                            </div>
+                            <span class="icon-box bg-success text-white"><i class="bi bi-graph-up-arrow"></i></span>
+                        </div>
+                    </div>
+                    <div class="card-bottom-accent bg-success"></div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow border-0 rounded-4 overflow-hidden">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-secondary text-uppercase fw-semibold small">Cost Value</div>
+                                <h5 class="fw-bold text-danger mt-1 mb-0" id="card-cost-value">₹0</h5>
+                            </div>
+                            <span class="icon-box bg-danger text-white"><i class="bi bi-cash-stack"></i></span>
+                        </div>
+                    </div>
+                    <div class="card-bottom-accent bg-danger"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Download Buttons -->
+        <div class="d-flex gap-2 mb-3">
+            <button class="btn btn-outline-dark" id="download-summary">
+                <i class="bi bi-download me-2"></i> Download Summary
+            </button>
+            <button class="btn btn-outline-dark" id="download-detail-previous">
+                <i class="bi bi-calendar3 me-2"></i> Download Detail - Previous Month
+            </button>
+            <button class="btn btn-outline-dark" id="download-detail-current">
+                <i class="bi bi-file-earmark me-2"></i> Download Detail - Current Month
+            </button>
+        </div>
+
+        <!-- Filters -->
+        <div class="card mb-4 shadow border-0 rounded-4">
+            <div class="card-header py-2" style="background: linear-gradient(90deg, #7293F3, #7293F3); color: white;">
+                <i class="bi bi-funnel-fill me-2"></i><span class="fw-bold">Filters</span>
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-3 mb-3">
+                    <div class="col-md-3">
+                        <input type="text" class="form-control" id="entity-filter" placeholder="Entity Name">
+                    </div>
+                    <div class="col-md-3">
+                        <input type="text" class="form-control" id="isin-filter" placeholder="ISIN">
+                    </div>
+                    <div class="col-md-3">
+                        <input type="text" class="form-control" id="scheme-filter" placeholder="Scheme Name">
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" id="month-filter">
+                            <option value="">Select Month</option>
+                            <option value="1">January</option>
+                            <option value="2">February</option>
+                            <option value="3">March</option>
+                            <option value="4">April</option>
+                            <option value="5">May</option>
+                            <option value="6">June</option>
+                            <option value="7">July</option>
+                            <option value="8">August</option>
+                            <option value="9">September</option>
+                            <option value="10">October</option>
+                            <option value="11">November</option>
+                            <option value="12">December</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-primary" id="apply-filters"><i class="bi bi-check-circle me-1"></i> Apply</button>
+                    <button class="btn btn-outline-secondary" id="reset-filters"><i class="bi bi-arrow-repeat me-1"></i> Reset</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="card shadow border-0 rounded-4">
+            <div class="card-header py-2" style="background: linear-gradient(90deg, #7293F3, #5a7be3); color: white;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div><i class="bi bi-table me-2"></i><span class="fw-bold">Portfolio Data</span></div>
+                    <div>Total: <span id="total-records">0</span></div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" id="portfolio-table">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Folio No</th>
+                                <th>Entity Name</th>
+                                <th>ISIN</th>
+                                <th>Scheme Name</th>
+                                <th>Cost Value</th>
+                                <th>Unit Balance</th>
+                                <th>NAV Date</th>
+                                <th>Market Value</th>
+                                <th>Updated On</th>
+                                <th>Updated By</th>
+                            </tr>
+                            <tr class="bg-light">
+                                <th><input type="text" class="form-control form-control-sm column-search" data-column="0" placeholder="Search..."></th>
+                                <th><input type="text" class="form-control form-control-sm column-search" data-column="1" placeholder="Search..."></th>
+                                <th><input type="text" class="form-control form-control-sm column-search" data-column="2" placeholder="Search..."></th>
+                                <th><input type="text" class="form-control form-control-sm column-search" data-column="3" placeholder="Search..."></th>
+                                <th><input type="text" class="form-control form-control-sm column-search" data-column="4" placeholder="Search..."></th>
+                                <th><input type="text" class="form-control form-control-sm column-search" data-column="5" placeholder="Search..."></th>
+                                <th><input type="text" class="form-control form-control-sm column-search" data-column="6" placeholder="Search..."></th>
+                                <th><input type="text" class="form-control form-control-sm column-search" data-column="7" placeholder="Search..."></th>
+                                <th><input type="text" class="form-control form-control-sm column-search" data-column="8" placeholder="Search..."></th>
+                                <th><input type="text" class="form-control form-control-sm column-search" data-column="9" placeholder="Search..."></th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 11">
+        <div id="toast" class="toast hide" role="alert">
+            <div class="toast-header">
+                <strong class="me-auto">Notification</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body"></div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+
+    <script>
+        let table;
+        let isStatsLoading = false;
+        
+        $(document).ready(function() {
+            initDataTable();
+            initFilters();
+            loadStats();
+        });
+
+        function getAllFilterData() {
+            return {
+                // Main filters
+                entity_filter: $('#entity-filter').val() || '',
+                isin_filter: $('#isin-filter').val() || '',
+                scheme_filter: $('#scheme-filter').val() || '',
+                month_filter: $('#month-filter').val() || '',
+                
+                // Column searches
+                col_0_search: $('.column-search[data-column="0"]').val() || '',
+                col_1_search: $('.column-search[data-column="1"]').val() || '',
+                col_2_search: $('.column-search[data-column="2"]').val() || '',
+                col_3_search: $('.column-search[data-column="3"]').val() || '',
+                col_4_search: $('.column-search[data-column="4"]').val() || '',
+                col_5_search: $('.column-search[data-column="5"]').val() || '',
+                col_6_search: $('.column-search[data-column="6"]').val() || '',
+                col_7_search: $('.column-search[data-column="7"]').val() || '',
+                col_8_search: $('.column-search[data-column="8"]').val() || '',
+                col_9_search: $('.column-search[data-column="9"]').val() || '',
+                
+                // Global search
+                global_search: table ? table.search() : ''
+            };
+        }
+
+        function forceUpdateStats() {
+            if (isStatsLoading) return;
+            
+            isStatsLoading = true;
+            const filterData = getAllFilterData();
+            
+            console.log('Forcing stats update with filters:', filterData);
+            
+            $.ajax({
+                url: '/camsapp/api/summary-stats/',
+                type: 'GET',
+                data: filterData,
+                cache: false,
+                timeout: 10000,
+                success: function(response) {
+                    console.log('Stats response:', response);
+                    
+                    // Update cards with animation
+                    $('#card-entities').fadeOut(100, function() {
+                        $(this).text((response.total_entities || 0).toLocaleString()).fadeIn(100);
+                    });
+                    $('#card-folios').fadeOut(100, function() {
+                        $(this).text((response.total_folios || 0).toLocaleString()).fadeIn(100);
+                    });
+                    $('#card-market-value').fadeOut(100, function() {
+                        $(this).text('₹' + (response.total_market_value || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})).fadeIn(100);
+                    });
+                    $('#card-cost-value').fadeOut(100, function() {
+                        $(this).text('₹' + (response.total_cost_value || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})).fadeIn(100);
+                    });
+                },
+                error: function(xhr, error, thrown) {
+                    console.error('Stats Error:', error, xhr.responseText);
+                    showToast('Error updating statistics: ' + error, 'error');
+                },
+                complete: function() {
+                    isStatsLoading = false;
+                }
+            });
+        }
+
+        function initDataTable() {
+            table = $('#portfolio-table').DataTable({
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: '/camsapp/api/portfolio-data/',
+                    type: 'GET',
+                    data: function(d) {
+                        const filterData = getAllFilterData();
+                        Object.assign(d, filterData);
+                        return d;
+                    },
+                    error: function(xhr, error, thrown) {
+                        console.log('Table AJAX Error:', error);
+                        showToast('Error loading table data', 'error');
+                    }
+                },
+                columns: [
+                    { data: 0, orderable: true },
+                    { data: 1, orderable: true },
+                    { data: 2, orderable: true },
+                    { data: 3, orderable: true },
+                    { data: 4, orderable: true, className: 'text-end' },
+                    { data: 5, orderable: true, className: 'text-end' },
+                    { data: 6, orderable: true },
+                    { data: 7, orderable: true, className: 'text-end' },
+                    { data: 8, orderable: true },
+                    { data: 9, orderable: true }
+                ],
+                pageLength: 10,
+                lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+                order: [[8, 'desc']],
+                language: {
+                    processing: '<div class="spinner-border text-primary"></div>',
+                    paginate: {
+                        previous: '<i class="bi bi-chevron-left"></i>',
+                        next: '<i class="bi bi-chevron-right"></i>'
+                    }
+                },
+                drawCallback: function(settings) {
+                    $('#total-records').text((settings._iRecordsTotal || 0).toLocaleString());
+                    initISINEdit();
+                    
+                    // Force stats update after table draw
+                    setTimeout(function() {
+                        forceUpdateStats();
+                    }, 500);
+                }
+            });
+        }
+
+        function initFilters() {
+            // Apply filters button
+            $('#apply-filters').click(function() {
+                console.log('Apply filters clicked');
+                table.ajax.reload();
+                setTimeout(function() {
+                    forceUpdateStats();
+                }, 1000);
+                showToast('Filters applied', 'success');
+            });
+
+            // Reset filters button
+            $('#reset-filters').click(function() {
+                console.log('Reset filters clicked');
+                $('#entity-filter, #isin-filter, #scheme-filter').val('');
+                $('#month-filter').val('');
+                $('.column-search').val('');
+                table.search('').columns().search('');
+                table.ajax.reload();
+                setTimeout(function() {
+                    forceUpdateStats();
+                }, 1000);
+                showToast('Filters reset', 'info');
+            });
+
+            // Column search with immediate update
+            let searchTimeouts = {};
+            $('.column-search').on('keyup change', function() {
+                const column = $(this).data('column');
+                const value = $(this).val();
+                
+                console.log('Column search:', column, value);
+                
+                clearTimeout(searchTimeouts[column]);
+                searchTimeouts[column] = setTimeout(function() {
+                    table.ajax.reload();
+                    setTimeout(function() {
+                        forceUpdateStats();
+                    }, 1000);
+                }, 500);
+            });
+
+            // Global search
+            $(document).on('keyup', '#portfolio-table_filter input', function() {
+                console.log('Global search:', $(this).val());
+                setTimeout(function() {
+                    forceUpdateStats();
+                }, 1000);
+            });
+
+            // Download buttons
+            $('#download-summary').click(function() {
+                downloadSummary();
+            });
+
+            $('#download-detail-previous').click(function() {
+                const previousMonth = getPreviousMonth();
+                downloadDetail(previousMonth.month, previousMonth.year);
+            });
+
+            $('#download-detail-current').click(function() {
+                const currentMonth = getCurrentMonth();
+                downloadDetail(currentMonth.month, currentMonth.year);
+            });
+        }
+
+        function loadStats() {
+            forceUpdateStats();
+        }
+
+        function initISINEdit() {
+            $('.editable-isin').off('click').on('click', function() {
+                const $this = $(this);
+                const currentValue = $this.data('value');
+                const id = $this.data('id');
+                
+                if ($this.find('input').length > 0) return;
+                
+                const $input = $('<input>', {
+                    type: 'text',
+                    value: currentValue,
+                    class: 'form-control form-control-sm editing',
+                    maxlength: 12
+                });
+                
+                const originalHtml = $this.html();
+                $this.html('').append($input);
+                $input.focus().select();
+                
+                $input.on('blur keypress', function(e) {
+                    if (e.type === 'keypress' && e.which !== 13) return;
+                    
+                    const newValue = $(this).val().trim().toUpperCase();
+                    
+                    if (newValue === currentValue) {
+                        $this.html(originalHtml);
+                        return;
+                    }
+                    
+                    if (newValue.length !== 12) {
+                        showToast('ISIN must be 12 characters', 'error');
+                        $this.html(originalHtml);
+                        return;
+                    }
+                    
+                    updateISIN(id, newValue, $this, originalHtml);
+                });
+            });
+        }
+
+        function updateISIN(id, newValue, $element, originalHtml) {
+            $.ajax({
+                url: '/camsapp/api/update-isin/',
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                data: JSON.stringify({ id: id, isin: newValue }),
+                contentType: 'application/json',
+                success: function(response) {
+                    if (response.success) {
+                        $element.html(newValue);
+                        $element.data('value', newValue);
+                        showToast('ISIN updated successfully', 'success');
+                        table.ajax.reload(null, false);
+                    } else {
+                        showToast(response.error, 'error');
+                        $element.html(originalHtml);
+                    }
+                },
+                error: function() {
+                    showToast('Error updating ISIN', 'error');
+                    $element.html(originalHtml);
+                }
+            });
+        }
+
+        function showToast(message, type) {
+            $('.toast-body').text(message);
+            const toast = new bootstrap.Toast(document.getElementById('toast'));
+            toast.show();
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Download functionality
+        function downloadSummary() {
+            const filterData = getAllFilterData();
+            const params = new URLSearchParams();
+            
+            // Add all filter parameters
+            Object.keys(filterData).forEach(key => {
+                if (filterData[key]) {
+                    params.append(key, filterData[key]);
+                }
+            });
+            
+            // Create download URL
+            const downloadUrl = '/camsapp/download/summary/?' + params.toString();
+            
+            // Show loading toast
+            showToast('Preparing download...', 'info');
+            
+            // Trigger download
+            window.open(downloadUrl, '_blank');
+            
+            // Success toast
+            setTimeout(() => {
+                showToast('Summary download started', 'success');
+            }, 1000);
+        }
+
+        function downloadDetail(month, year) {
+            const filterData = getAllFilterData();
+            const params = new URLSearchParams();
+            
+            // Add month and year
+            params.append('month', month);
+            params.append('year', year);
+            
+            // Add current filters (optional for detail view)
+            Object.keys(filterData).forEach(key => {
+                if (filterData[key] && ['entity_filter', 'isin_filter', 'scheme_filter'].includes(key)) {
+                    params.append(key, filterData[key]);
+                }
+            });
+            
+            // Create download URL
+            const downloadUrl = '/camsapp/download/detail/?' + params.toString();
+            
+            // Show loading toast
+            showToast(`Preparing ${getMonthName(month)} ${year} detail download...`, 'info');
+            
+            // Trigger download
+            window.open(downloadUrl, '_blank');
+            
+            // Success toast
+            setTimeout(() => {
+                showToast(`Detail download for ${getMonthName(month)} ${year} started`, 'success');
+            }, 1000);
+        }
+
+        function getCurrentMonth() {
+            const now = new Date();
+            return {
+                month: now.getMonth() + 1, // JavaScript months are 0-based
+                year: now.getFullYear()
+            };
+        }
+
+        function getPreviousMonth() {
+            const now = new Date();
+            const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+            return {
+                month: prevMonth.getMonth() + 1,
+                year: prevMonth.getFullYear()
+            };
+        }
+
+        function getMonthName(monthNumber) {
+            const months = [
+                'January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'
+            ];
+            return months[monthNumber - 1] || 'Unknown';
+        }
+
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+                    xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                }
+            }
+        });
+    </script>
+</body>
+</html>

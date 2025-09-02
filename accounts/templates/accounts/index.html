@@ -1,0 +1,97 @@
+{% extends 'accounts/base.html' %}
+{% load static %}
+
+{% block home %}{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<!-- <section id="home" class="hero-section d-flex align-items-center"> -->
+<section class="hero d-flex align-items-center position-relative text-light" 
+    style="min-height: 90.7vh; 
+           background: url('https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=1600&q=80') no-repeat center center/cover;
+           background-attachment: fixed;">
+
+    <!-- Dark Glass Overlay -->
+    <div class="overlay position-absolute top-0 start-0 w-100 h-100"
+        style="background: rgba(0,0,0,0.75); backdrop-filter: blur(4px);"></div>
+
+    <!-- Animated Finance Graph Overlay -->
+    <canvas id="financeGraph" class="position-absolute top-0 start-0 w-100 h-100"></canvas>
+
+    <div class="container position-relative text-center">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+
+                <!-- Heading with Glow -->
+                <h1 class="display-2 fw-bold mb-4 animate__animated animate__fadeInDown gradient-glow">
+                    Eternal Limited
+                    <span class="shine"></span>
+                </h1>
+
+                <!-- Subtitle -->
+                <p class="lead mb-5 animate__animated animate__fadeInUp animate__delay-1s"
+                    style="font-weight: 300; font-size: 1.4rem; color: #e5e5e5; max-width: 750px; margin: auto;">
+                    <span style="color:#fff; font-weight:500;">Trusted. Innovative. Timeless.</span><br>
+                    Finance solutions built to last for generations.
+                </p>
+
+                <!-- Buttons -->
+                <!-- <div class="d-flex flex-column flex-sm-row gap-4 justify-content-center animate__animated animate__fadeInUp animate__delay-2s">
+                    <a href="#" class="btn btn-lg px-5 fw-bold btn-glow">
+                        📊 Explore Services
+                    </a>
+                    <a href="#about" class="btn btn-outline-light btn-lg px-5 fw-bold"
+                        style="border-radius: 50px; border-width: 2px; transition: 0.3s;">
+                        Learn More
+                    </a>
+                </div> -->
+
+                <!-- Decorative Divider -->
+                <div class="mt-5 animate__animated animate__fadeInUp animate__delay-3s">
+                    <div style="height: 4px; width: 120px; background: linear-gradient(90deg,#fff,#999,#fff); margin: auto; border-radius: 50px; box-shadow: 0 0 25px #fff;"></div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Angled Bottom Divider -->
+    <div class="position-absolute bottom-0 w-100" 
+         style="height:80px; background: #fff; clip-path: polygon(0 100%, 100% 100%, 100% 100%);">
+    </div>
+</section>
+
+
+
+<script>
+/* Subtle Animated Finance Graph Lines */
+const canvas = document.getElementById("financeGraph");
+const ctx = canvas.getContext("2d");
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+function drawGraph() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = "rgba(255,255,255,0.15)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    let x = 0;
+    ctx.moveTo(0, canvas.height / 2);
+    for (let i = 0; i < canvas.width; i += 40) {
+        let y = canvas.height / 2 + Math.sin(i * 0.01 + Date.now() * 0.001) * 50;
+        ctx.lineTo(i, y);
+    }
+    ctx.stroke();
+}
+setInterval(drawGraph, 50);
+</script>
+
+
+
+<!-- </section> -->
+
+
+
+
+
+{% endblock %}

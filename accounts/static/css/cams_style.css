@@ -1,0 +1,30 @@
+ .icon-box {
+     width: 48px;
+     height: 48px;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     border-radius: 12px;
+     font-size: 20px;
+ }
+
+ .card-bottom-accent {
+     height: 4px;
+ }
+
+ .editable-isin {
+     cursor: pointer;
+     border-bottom: 1px dashed #007bff;
+     padding: 2px 4px;
+     border-radius: 3px;
+ }
+
+ .editable-isin:hover {
+     background-color: #e3f2fd;
+ }
+
+ .editing {
+     background-color: #fff3cd !important;
+     border: 2px solid #ffc107 !important;
+     padding: 4px;
+ }

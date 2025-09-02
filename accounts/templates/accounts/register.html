@@ -1,0 +1,84 @@
+{% extends 'accounts/base.html' %}
+{% block title %}Register{% endblock %}
+{% block register %}{% endblock %}
+
+
+
+{% block content %}
+
+<!-- <div class="d-flex justify-content-center align-items-center" style="min-height: 90vh;">
+  <div class="card shadow p-4" style="width: 100%; max-width: 500px;">
+    <h4 class="mb-3 text-center">Create a New Account</h4>
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% for field in form %}
+      <div class="mb-3">
+        <label class="form-label">{{ field.label }}</label>
+        {{ field }}
+        {% if field.errors %}
+        <div class="text-danger small">{{ field.errors.0 }}</div>
+        {% endif %}
+      </div>
+      {% endfor %}
+      <button class="btn btn-dark w-100">Register</button>
+    </form>
+
+    <div class="text-center mt-3">
+      <p>Already have an account? <a href="{% url 'login' %}">Login</a></p>
+    </div>
+  </div>
+</div> -->
+
+<div class="auth-wrapper d-flex justify-content-center align-items-center " style="min-height: 70vh;">
+  <div class="register-card p-5 position-relative animate__animated animate__fadeInUp animate__delay-.9s">
+
+    <!-- Decorative Background -->
+    <div class="wave-bg"></div>
+    <div class="orb"></div>
+
+    <!-- Icon/Graphic -->
+    <div class="text-center mb-3 position-relative">
+      <div class="icon-circle">
+        <i class="bi bi-person-plus-fill"></i>
+      </div>
+    </div>
+
+    <!-- Title -->
+    <h4 class="text-center fw-bold mb-2 text-dark">Create a New Account</h4>
+    <p class="text-center text-muted mb-3">Join us and start your journey</p>
+    {% if form.non_field_errors %}
+    <div class="alert alert-danger">
+      {% for error in form.non_field_errors %}
+      {{ error }}
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Register Form -->
+    <form method="post" novalidate class="position-relative">
+      {% csrf_token %}
+      {% for field in form %}
+      <div class="mb-2">
+        <label class="form-label fw-semibold text-dark small">{{ field.label }}</label>
+        {{ field }}
+        {% if field.errors %}
+        <div class="text-danger small mt-1">{{ field.errors.0 }}</div>
+        {% endif %}
+      </div>
+      {% endfor %}
+      <button class="btn register-btn w-100 py-2 fw-bold">Register</button>
+    </form>
+
+    <!-- Login Link -->
+    <div class="text-center mt-3 position-relative">
+      <p class="text-dark mb-0 small">Already have an account?
+        <a href="{% url 'login' %}" class="login-link">Login</a>
+      </p>
+    </div>
+  </div>
+</div>
+
+
+
+{% endblock %}

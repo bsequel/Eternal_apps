@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAMS Carvy Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <style>
+        .card-bottom-accent {
+            height: 3px;
+            width: 100%;
+        }
+        
+        .icon-box {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 18px;
+        }
+        
+        .editable-isin {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .editable-isin:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .editing {
+            background-color: #fff3cd !important;
+        }
+        
+        .toast {
+            min-width: 300px;
+        }
+        
+        .spinner-border {
+            width: 2rem;
+            height: 2rem;
+        }
+        
+        .table th, .table td {
+            vertical-align: middle;
+        }
+        
+        .column-search {
+            border: 1px solid #dee2e6;
+        }
+        
+        .btn-group-custom {
+            gap: 8px;
+        }
+        
+        .stats-card {
+            transition: transform 0.2s ease-in-out;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .filter-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-4" id="cams-dashboard-root">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h2 class="mb-0">
+                    <span style="color: #7293F3;">CAMS Carvy</span>
+                    <span class="text-info fs-5">Dashboard</span>
+                    <small class="text-muted ms-2" id="cams-last-updated"></small>
+                </h2>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="row g-3 mb-4" id="cams-stats-cards">
+            <div class="col-md-3">
+                <div class="card shadow border-0 rounded-4 overflow-hidden stats-card" data-card-type="entities">
+                    <div class="card-body p-3 position-relative">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-secondary text-uppercase fw-semibold small">Total Entities</div>
+                                <h5 class="fw-bold text-dark mt-1 mb-0" id="cams-card-entities" data-stat-type="entities">0</h5>
+                            </div>
+                            <span class="icon-box bg-info text-white">
+                                <i class="bi bi-people-fill" data-icon-type="entities"></i>
+                            </span>
+                        </div>
+                        <div class="loading-overlay d-none" id="cams-loading-entities">
+                            <div class="spinner-border spinner-border-sm text-info"></div>
+                        </div>
+                    </div>
+                    <div class="card-bottom-accent bg-info"></div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow border-0 rounded-4 overflow-hidden stats-card" data-card-type="folios">
+                    <div class="card-body p-3 position-relative">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-secondary text-uppercase fw-semibold small">Total Folios</div>
+                                <h5 class="fw-bold text-primary mt-1 mb-0" id="cams-card-folios" data-stat-type="folios">0</h5>
+                            </div>
+                            <span class="icon-box bg-primary text-white">
+                                <i class="bi bi-collection-fill" data-icon-type="folios"></i>
+                            </span>
+                        </div>
+                        <div class="loading-overlay d-none" id="cams-loading-folios">
+                            <div class="spinner-border spinner-border-sm text-primary"></div>
+                        </div>
+                    </div>
+                    <div class="card-bottom-accent bg-primary"></div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow border-0 rounded-4 overflow-hidden stats-card" data-card-type="market-value">
+                    <div class="card-body p-3 position-relative">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-secondary text-uppercase fw-semibold small">Market Value</div>
+                                <h5 class="fw-bold text-success mt-1 mb-0" id="cams-card-market-value" data-stat-type="market-value">₹0</h5>
+                            </div>
+                            <span class="icon-box bg-success text-white">
+                                <i class="bi bi-graph-up-arrow" data-icon-type="market-value"></i>
+                            </span>
+                        </div>
+                        <div class="loading-overlay d-none" id="cams-loading-market-value">
+                            <div class="spinner-border spinner-border-sm text-success"></div>
+                        </div>
+                    </div>
+                    <div class="card-bottom-accent bg-success"></div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow border-0 rounded-4 overflow-hidden stats-card" data-card-type="cost-value">
+                    <div class="card-body p-3 position-relative">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-secondary text-uppercase fw-semibold small">Cost Value</div>
+                                <h5 class="fw-bold text-danger mt-1 mb-0" id="cams-card-cost-value" data-stat-type="cost-value">₹0</h5>
+                            </div>
+                            <span class="icon-box bg-danger text-white">
+                                <i class="bi bi-cash-stack" data-icon-type="cost-value"></i>
+                            </span>
+                        </div>
+                        <div class="loading-overlay d-none" id="cams-loading-cost-value">
+                            <div class="spinner-border spinner-border-sm text-danger"></div>
+                        </div>
+                    </div>
+                    <div class="card-bottom-accent bg-danger"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Download Buttons -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="d-flex flex-wrap gap-2 btn-group-custom" id="cams-download-section">
+                    <button class="btn btn-outline-dark" id="cams-download-summary" data-download-type="summary">
+                        <i class="bi bi-download me-2"></i> Download Summary
+                    </button>
+                    <button class="btn btn-outline-dark" id="cams-download-detail-previous" data-download-type="detail-previous">
+                        <i class="bi bi-calendar3 me-2"></i> Download Detail - Previous Month
+                    </button>
+                    <button class="btn btn-outline-dark" id="cams-download-detail-current" data-download-type="detail-current">
+                        <i class="bi bi-file-earmark me-2"></i> Download Detail - Current Month
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="card mb-4 shadow border-0 rounded-4" id="cams-filters-container">
+            <div class="card-header py-3 filter-section">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-funnel-fill me-2 text-primary"></i>
+                    <span class="fw-bold text-dark">Filters & Search</span>
+                    <span class="badge bg-secondary ms-auto" id="cams-active-filters-count">0 Active</span>
+                </div>
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-3 mb-3" id="cams-main-filters">
+                    <div class="col-md-3">
+                        <label for="cams-entity-filter" class="form-label text-muted small">Entity Name</label>
+                        <input type="text" 
+                               class="form-control cams-filter-input" 
+                               id="cams-entity-filter" 
+                               data-filter-type="entity"
+                               placeholder="Search entities..."
+                               autocomplete="off">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="cams-isin-filter" class="form-label text-muted small">ISIN Code</label>
+                        <input type="text" 
+                               class="form-control cams-filter-input" 
+                               id="cams-isin-filter" 
+                               data-filter-type="isin"
+                               placeholder="Enter ISIN..."
+                               maxlength="12"
+                               autocomplete="off">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="cams-scheme-filter" class="form-label text-muted small">Scheme Name</label>
+                        <input type="text" 
+                               class="form-control cams-filter-input" 
+                               id="cams-scheme-filter" 
+                               data-filter-type="scheme"
+                               placeholder="Search schemes..."
+                               autocomplete="off">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="cams-month-filter" class="form-label text-muted small">Month Filter</label>
+                        <select class="form-select cams-filter-input" id="cams-month-filter" data-filter-type="month">
+                            <option value="" selected>All Months</option>
+                            <option value="1">January</option>
+                            <option value="2">February</option>
+                            <option value="3">March</option>
+                            <option value="4">April</option>
+                            <option value="5">May</option>
+                            <option value="6">June</option>
+                            <option value="7">July</option>
+                            <option value="8">August</option>
+                            <option value="9">September</option>
+                            <option value="10">October</option>
+                            <option value="11">November</option>
+                            <option value="12">December</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="d-flex gap-2 flex-wrap" id="cams-filter-actions">
+                    <button class="btn btn-primary" id="cams-apply-filters" data-action="apply">
+                        <i class="bi bi-check-circle me-1"></i> Apply Filters
+                    </button>
+                    <button class="btn btn-outline-secondary" id="cams-reset-filters" data-action="reset">
+                        <i class="bi bi-arrow-repeat me-1"></i> Reset All
+                    </button>
+                    <button class="btn btn-outline-info" id="cams-save-filters" data-action="save">
+                        <i class="bi bi-bookmark me-1"></i> Save Current
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="card shadow border-0 rounded-4" id="cams-table-container">
+            <div class="card-header py-3" style="background: linear-gradient(90deg, #7293F3, #5a7be3); color: white;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="bi bi-table me-2"></i>
+                        <span class="fw-bold">Portfolio Data</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="badge bg-light text-dark">
+                            Total: <span id="cams-total-records" data-record-count>0</span>
+                        </span>
+                        <span class="badge bg-light text-dark">
+                            Filtered: <span id="cams-filtered-records" data-filtered-count>0</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" id="cams-portfolio-table" data-table-type="portfolio">
+                        <thead class="table-dark">
+                            <tr data-header-row="main">
+                                <th data-column="folio" data-sort="string">Folio No</th>
+                                <th data-column="entity" data-sort="string">Entity Name</th>
+                                <th data-column="isin" data-sort="string">ISIN</th>
+                                <th data-column="scheme" data-sort="string">Scheme Name</th>
+                                <th data-column="cost" data-sort="numeric">Cost Value</th>
+                                <th data-column="units" data-sort="numeric">Unit Balance</th>
+                                <th data-column="nav-date" data-sort="date">NAV Date</th>
+                                <th data-column="market" data-sort="numeric">Market Value</th>
+                                <th data-column="updated-on" data-sort="date">Updated On</th>
+                                <th data-column="updated-by" data-sort="string">Updated By</th>
+                            </tr>
+                            <tr class="bg-light" data-header-row="search">
+                                <th>
+                                    <input type="text" 
+                                           class="form-control form-control-sm cams-column-search" 
+                                           data-column-index="0" 
+                                           data-search-type="folio"
+                                           placeholder="Search folios..."
+                                           id="cams-search-folio">
+                                </th>
+                                <th>
+                                    <input type="text" 
+                                           class="form-control form-control-sm cams-column-search" 
+                                           data-column-index="1" 
+                                           data-search-type="entity"
+                                           placeholder="Search entities..."
+                                           id="cams-search-entity">
+                                </th>
+                                <th>
+                                    <input type="text" 
+                                           class="form-control form-control-sm cams-column-search" 
+                                           data-column-index="2" 
+                                           data-search-type="isin"
+                                           placeholder="Search ISIN..."
+                                           id="cams-search-isin">
+                                </th>
+                                <th>
+                                    <input type="text" 
+                                           class="form-control form-control-sm cams-column-search" 
+                                           data-column-index="3" 
+                                           data-search-type="scheme"
+                                           placeholder="Search schemes..."
+                                           id="cams-search-scheme">
+                                </th>
+                                <th>
+                                    <input type="text" 
+                                           class="form-control form-control-sm cams-column-search" 
+                                           data-column-index="4" 
+                                           data-search-type="cost"
+                                           placeholder="Min cost..."
+                                           id="cams-search-cost">
+                                </th>
+                                <th>
+                                    <input type="text" 
+                                           class="form-control form-control-sm cams-column-search" 
+                                           data-column-index="5" 
+                                           data-search-type="units"
+                                           placeholder="Min units..."
+                                           id="cams-search-units">
+                                </th>
+                                <th>
+                                    <input type="date" 
+                                           class="form-control form-control-sm cams-column-search" 
+                                           data-column-index="6" 
+                                           data-search-type="nav-date"
+                                           id="cams-search-nav-date">
+                                </th>
+                                <th>
+                                    <input type="text" 
+                                           class="form-control form-control-sm cams-column-search" 
+                                           data-column-index="7" 
+                                           data-search-type="market"
+                                           placeholder="Min market..."
+                                           id="cams-search-market">
+                                </th>
+                                <th>
+                                    <input type="date" 
+                                           class="form-control form-control-sm cams-column-search" 
+                                           data-column-index="8" 
+                                           data-search-type="updated-on"
+                                           id="cams-search-updated-on">
+                                </th>
+                                <th>
+                                    <input type="text" 
+                                           class="form-control form-control-sm cams-column-search" 
+                                           data-column-index="9" 
+                                           data-search-type="updated-by"
+                                           placeholder="Search users..."
+                                           id="cams-search-updated-by">
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="cams-table-body">
+                            <!-- Data will be populated by DataTable -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 11" id="cams-toast-container">
+        <div id="cams-toast" class="toast hide" role="alert" data-toast-type="notification">
+            <div class="toast-header">
+                <i class="bi bi-info-circle-fill text-primary me-2" id="cams-toast-icon"></i>
+                <strong class="me-auto" id="cams-toast-title">CAMS Notification</strong>
+                <small class="text-muted" id="cams-toast-time"></small>
+                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body" id="cams-toast-body"></div>
+        </div>
+    </div>
+
+    <!-- Loading Scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+
+    <script>
+        // CAMS Dashboard Namespace
+        const CAMS = {
+            // Configuration
+            config: {
+                tableId: '#cams-portfolio-table',
+                apiEndpoints: {
+                    portfolioData: '/camsapp/api/portfolio-data/',
+                    summaryStats: '/camsapp/api/summary-stats/',
+                    updateIsin: '/camsapp/api/update-isin/',
+                    downloadSummary: '/camsapp/download/summary/',
+                    downloadDetail: '/camsapp/download/detail/'
+                },
+                debounceDelay: 500,
+                statsUpdateDelay: 1000,
+                ajaxTimeout: 10000
+            },
+
+            // State Management
+            state: {
+                table: null,
+                isStatsLoading: false,
+                searchTimeouts: {},
+                lastStatsUpdate: null,
+                activeFilters: new Set(),
+                sessionId: 'cams_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
+            },
+
+            // Utility Functions
+            utils: {
+                generateUniqueId: function(prefix = 'cams') {
+                    return `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                },
+
+                formatCurrency: function(amount) {
+                    return '₹' + (amount || 0).toLocaleString('en-IN', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+                },
+
+                formatNumber: function(number) {
+                    return (number || 0).toLocaleString('en-IN');
+                },
+
+                getCookie: function(name) {
+                    let cookieValue = null;
+                    if (document.cookie && document.cookie !== '') {
+                        const cookies = document.cookie.split(';');
+                        for (let i = 0; i < cookies.length; i++) {
+                            const cookie = cookies[i].trim();
+                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                break;
+                            }
+                        }
+                    }
+                    return cookieValue;
+                },
+
+                getCurrentDateTime: function() {
+                    return new Date().toLocaleString('en-IN');
+                },
+
+                getCurrentMonth: function() {
+                    const now = new Date();
+                    return {
+                        month: now.getMonth() + 1,
+                        year: now.getFullYear()
+                    };
+                },
+
+                getPreviousMonth: function() {
+                    const now = new Date();
+                    const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+                    return {
+                        month: prevMonth.getMonth() + 1,
+                        year: prevMonth.getFullYear()
+                    };
+                },
+
+                getMonthName: function(monthNumber) {
+                    const months = [
+                        'January', 'February', 'March', 'April', 'May', 'June',
+                        'July', 'August', 'September', 'October', 'November', 'December'
+                    ];
+                    return months[monthNumber - 1] || 'Unknown';
+                }
+            },
+
+            // Filter Management
+            filters: {
+                getAllFilterData: function() {
+                    const filterData = {
+                        // Main filters with unique identifiers
+                        entity_filter: $('#cams-entity-filter').val() || '',
+                        isin_filter: $('#cams-isin-filter').val() || '',
+                        scheme_filter: $('#cams-scheme-filter').val() || '',
+                        month_filter: $('#cams-month-filter').val() || '',
+                        
+                        // Column searches with unique identifiers
+                        col_0_search: $('#cams-search-folio').val() || '',
+                        col_1_search: $('#cams-search-entity').val() || '',
+                        col_2_search: $('#cams-search-isin').val() || '',
+                        col_3_search: $('#cams-search-scheme').val() || '',
+                        col_4_search: $('#cams-search-cost').val() || '',
+                        col_5_search: $('#cams-search-units').val() || '',
+                        col_6_search: $('#cams-search-nav-date').val() || '',
+                        col_7_search: $('#cams-search-market').val() || '',
+                        col_8_search: $('#cams-search-updated-on').val() || '',
+                        col_9_search: $('#cams-search-updated-by').val() || '',
+                        
+                        // Global search
+                        global_search: CAMS.state.table ? CAMS.state.table.search() : '',
+                        
+                        // Session identifier for tracking
+                        session_id: CAMS.state.sessionId,
+                        timestamp: Date.now()
+                    };
+                    
+                    return filterData;
+                },
+
+                updateActiveFiltersCount: function() {
+                    const filterData = this.getAllFilterData();
+                    let activeCount = 0;
+                    
+                    Object.keys(filterData).forEach(key => {
+                        if (filterData[key] && key !== 'session_id' && key !== 'timestamp') {
+                            activeCount++;
+                        }
+                    });
+                    
+                    CAMS.state.activeFilters.clear();
+                    if (activeCount > 0) {
+                        Object.keys(filterData).forEach(key => {
+                            if (filterData[key] && key !== 'session_id' && key !== 'timestamp') {
+                                CAMS.state.activeFilters.add(key);
+                            }
+                        });
+                    }
+                    
+                    $('#cams-active-filters-count').text(`${activeCount} Active`);
+                },
+
+                resetAllFilters: function() {
+                    // Reset main filters
+                    $('#cams-entity-filter, #cams-isin-filter, #cams-scheme-filter').val('');
+                    $('#cams-month-filter').val('');
+                    
+                    // Reset column searches
+                    $('.cams-column-search').val('');
+                    
+                    // Reset global search
+                    if (CAMS.state.table) {
+                        CAMS.state.table.search('').columns().search('');
+                    }
+                    
+                    // Clear active filters
+                    CAMS.state.activeFilters.clear();
+                    this.updateActiveFiltersCount();
+                    
+                    CAMS.notifications.showToast('All filters have been reset', 'info');
+                },
+
+                applyFilters: function() {
+                    if (CAMS.state.table) {
+                        console.log('Applying filters with session:', CAMS.state.sessionId);
+                        CAMS.state.table.ajax.reload();
+                        
+                        setTimeout(() => {
+                            CAMS.stats.forceUpdateStats();
+                        }, CAMS.config.statsUpdateDelay);
+                        
+                        this.updateActiveFiltersCount();
+                        CAMS.notifications.showToast('Filters applied successfully', 'success');
+                    }
+                }
+            },
+
+            // Statistics Management
+            stats: {
+                forceUpdateStats: function() {
+                    if (CAMS.state.isStatsLoading) {
+                        console.log('Stats update already in progress, skipping...');
+                        return;
+                    }
+                    
+                    CAMS.state.isStatsLoading = true;
+                    const updateId = CAMS.utils.generateUniqueId('stats_update');
+                    const filterData = CAMS.filters.getAllFilterData();
+                    
+                    // Add unique update identifier
+                    filterData.update_id = updateId;
+                    
+                    console.log('Forcing stats update:', updateId, filterData);
+                    
+                    // Show loading indicators
+                    $('.loading-overlay').removeClass('d-none');
+                    
+                    $.ajax({
+                        url: CAMS.config.apiEndpoints.summaryStats,
+                        type: 'GET',
+                        data: filterData,
+                        cache: false,
+                        timeout: CAMS.config.ajaxTimeout,
+                        success: function(response) {
+                            console.log('Stats response for update:', updateId, response);
+                            
+                            // Update cards with animation and unique tracking
+                            CAMS.stats.updateStatsCard('entities', response.total_entities || 0);
+                            CAMS.stats.updateStatsCard('folios', response.total_folios || 0);
+                            CAMS.stats.updateStatsCard('market-value', response.total_market_value || 0, 'currency');
+                            CAMS.stats.updateStatsCard('cost-value', response.total_cost_value || 0, 'currency');
+                            
+                            // Update last updated time
+                            CAMS.state.lastStatsUpdate = new Date();
+                            $('#cams-last-updated').text(`Updated: ${CAMS.utils.getCurrentDateTime()}`);
+                        },
+                        error: function(xhr, error, thrown) {
+                            console.error('Stats Error for update:', updateId, error, xhr.responseText);
+                            CAMS.notifications.showToast('Error updating statistics: ' + error, 'error');
+                        },
+                        complete: function() {
+                            CAMS.state.isStatsLoading = false;
+                            $('.loading-overlay').addClass('d-none');
+                        }
+                    });
+                },
+
+                updateStatsCard: function(cardType, value, format = 'number') {
+                    const cardId = `#cams-card-${cardType}`;
+                    const loadingId = `#cams-loading-${cardType}`;
+                    
+                    let formattedValue;
+                    switch (format) {
+                        case 'currency':
+                            formattedValue = CAMS.utils.formatCurrency(value);
+                            break;
+                        case 'number':
+                        default:
+                            formattedValue = CAMS.utils.formatNumber(value);
+                            break;
+                    }
+                    
+                    $(cardId).fadeOut(150, function() {
+                        $(this).text(formattedValue)
+                               .attr('data-last-updated', Date.now())
+                               .fadeIn(150);
+                    });
+                }
+            },
+
+            // Table Management
+            table: {
+                initDataTable: function() {
+                    CAMS.state.table = $(CAMS.config.tableId).DataTable({
+                        processing: true,
+                        serverSide: true,
+                        ajax: {
+                            url: CAMS.config.apiEndpoints.portfolioData,
+                            type: 'GET',
+                            data: function(d) {
+                                const filterData = CAMS.filters.getAllFilterData();
+                                // Add unique request identifier
+                                const requestId = CAMS.utils.generateUniqueId('table_request');
+                                filterData.request_id = requestId;
+                                
+                                Object.assign(d, filterData);
+                                console.log('Table AJAX request:', requestId, d);
+                                return d;
+                            },
+                            error: function(xhr, error, thrown) {
+                                console.error('Table AJAX Error:', error, xhr.responseText);
+                                CAMS.notifications.showToast('Error loading table data: ' + error, 'error');
+                            }
+                        },
+                        columns: [
+                            { 
+                                data: 0, 
+                                orderable: true,
+                                className: 'folio-column',
+                                render: function(data, type, row, meta) {
+                                    return `<span data-folio="${data}" data-row-id="${meta.row}">${data}</span>`;
+                                }
+                            },
+                            { 
+                                data: 1, 
+                                orderable: true,
+                                className: 'entity-column',
+                                render: function(data, type, row, meta) {
+                                    return `<span data-entity="${data}" data-row-id="${meta.row}" title="${data}">${data}</span>`;
+                                }
+                            },
+                            { 
+                                data: 2, 
+                                orderable: true,
+                                className: 'isin-column',
+                                render: function(data, type, row, meta) {
+                                    const uniqueId = CAMS.utils.generateUniqueId('isin');
+                                    return `<span class="cams-editable-isin" 
+                                                  data-isin-value="${data}" 
+                                                  data-record-id="${row[10] || meta.row}"
+                                                  data-unique-id="${uniqueId}"
+                                                  title="Click to edit ISIN">${data}</span>`;
+                                }
+                            },
+                            { 
+                                data: 3, 
+                                orderable: true,
+                                className: 'scheme-column',
+                                render: function(data, type, row, meta) {
+                                    return `<span data-scheme="${data}" data-row-id="${meta.row}" title="${data}">${data}</span>`;
+                                }
+                            },
+                            { 
+                                data: 4, 
+                                orderable: true, 
+                                className: 'text-end cost-column',
+                                render: function(data, type, row, meta) {
+                                    const formattedValue = CAMS.utils.formatCurrency(parseFloat(data) || 0);
+                                    return `<span data-cost="${data}" data-row-id="${meta.row}">${formattedValue}</span>`;
+                                }
+                            },
+                            { 
+                                data: 5, 
+                                orderable: true, 
+                                className: 'text-end units-column',
+                                render: function(data, type, row, meta) {
+                                    const formattedValue = CAMS.utils.formatNumber(parseFloat(data) || 0);
+                                    return `<span data-units="${data}" data-row-id="${meta.row}">${formattedValue}</span>`;
+                                }
+                            },
+                            { 
+                                data: 6, 
+                                orderable: true,
+                                className: 'nav-date-column',
+                                render: function(data, type, row, meta) {
+                                    return `<span data-nav-date="${data}" data-row-id="${meta.row}">${data}</span>`;
+                                }
+                            },
+                            { 
+                                data: 7, 
+                                orderable: true, 
+                                className: 'text-end market-column',
+                                render: function(data, type, row, meta) {
+                                    const formattedValue = CAMS.utils.formatCurrency(parseFloat(data) || 0);
+                                    return `<span data-market="${data}" data-row-id="${meta.row}">${formattedValue}</span>`;
+                                }
+                            },
+                            { 
+                                data: 8, 
+                                orderable: true,
+                                className: 'updated-on-column',
+                                render: function(data, type, row, meta) {
+                                    return `<span data-updated-on="${data}" data-row-id="${meta.row}">${data}</span>`;
+                                }
+                            },
+                            { 
+                                data: 9, 
+                                orderable: true,
+                                className: 'updated-by-column',
+                                render: function(data, type, row, meta) {
+                                    return `<span data-updated-by="${data}" data-row-id="${meta.row}">${data}</span>`;
+                                }
+                            }
+                        ],
+                        pageLength: 10,
+                        lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+                        order: [[8, 'desc']],
+                        language: {
+                            processing: '<div class="d-flex align-items-center justify-content-center"><div class="spinner-border text-primary me-2"></div><span>Loading CAMS data...</span></div>',
+                            paginate: {
+                                previous: '<i class="bi bi-chevron-left"></i>',
+                                next: '<i class="bi bi-chevron-right"></i>'
+                            },
+                            emptyTable: 'No portfolio data available with current filters',
+                            zeroRecords: 'No matching records found'
+                        },
+                        dom: '<"d-flex justify-content-between align-items-center mb-3"<"d-flex align-items-center"l><"d-flex align-items-center"f>>rtip',
+                        drawCallback: function(settings) {
+                            const totalRecords = settings._iRecordsTotal || 0;
+                            const filteredRecords = settings._iRecordsDisplay || 0;
+                            
+                            $('#cams-total-records').text(CAMS.utils.formatNumber(totalRecords));
+                            $('#cams-filtered-records').text(CAMS.utils.formatNumber(filteredRecords));
+                            
+                            // Initialize ISIN editing with unique identifiers
+                            CAMS.table.initISINEdit();
+                            
+                            // Update filters count
+                            CAMS.filters.updateActiveFiltersCount();
+                            
+                            // Force stats update after table draw with delay
+                            setTimeout(function() {
+                                CAMS.stats.forceUpdateStats();
+                            }, CAMS.config.statsUpdateDelay);
+                            
+                            console.log('Table drawn:', {
+                                total: totalRecords,
+                                filtered: filteredRecords,
+                                timestamp: new Date().toISOString()
+                            });
+                        }
+                    });
+                },
+
+                initISINEdit: function() {
+                    $('.cams-editable-isin').off('click.cams').on('click.cams', function(e) {
+                        e.stopPropagation();
+                        
+                        const $element = $(this);
+                        const currentValue = $element.data('isin-value');
+                        const recordId = $element.data('record-id');
+                        const uniqueId = $element.data('unique-id');
+                        
+                        // Prevent multiple editing sessions
+                        if ($element.find('input').length > 0) {
+                            return;
+                        }
+                        
+                        console.log('Starting ISIN edit:', {
+                            uniqueId: uniqueId,
+                            recordId: recordId,
+                            currentValue: currentValue
+                        });
+                        
+                        const inputId = CAMS.utils.generateUniqueId('isin_input');
+                        const $input = $(`<input type="text" 
+                                                id="${inputId}"
+                                                class="form-control form-control-sm cams-isin-editing" 
+                                                value="${currentValue}" 
+                                                maxlength="12" 
+                                                data-original-value="${currentValue}"
+                                                data-edit-id="${uniqueId}"
+                                                autocomplete="off">`);
+                        
+                        const originalHtml = $element.html();
+                        $element.html('').append($input).addClass('editing');
+                        $input.focus().select();
+                        
+                        // Handle input completion
+                        $input.on('blur.cams keypress.cams', function(e) {
+                            if (e.type === 'keypress' && e.which !== 13) return;
+                            
+                            const newValue = $(this).val().trim().toUpperCase();
+                            const editId = $(this).data('edit-id');
+                            
+                            console.log('Completing ISIN edit:', {
+                                editId: editId,
+                                oldValue: currentValue,
+                                newValue: newValue
+                            });
+                            
+                            if (newValue === currentValue) {
+                                // No change
+                                $element.html(originalHtml).removeClass('editing');
+                                return;
+                            }
+                            
+                            if (newValue.length !== 12) {
+                                CAMS.notifications.showToast('ISIN must be exactly 12 characters', 'error');
+                                $element.html(originalHtml).removeClass('editing');
+                                return;
+                            }
+                            
+                            // Validate ISIN format (basic)
+                            if (!/^[A-Z]{2}[A-Z0-9]{10}$/.test(newValue)) {
+                                CAMS.notifications.showToast('Invalid ISIN format', 'error');
+                                $element.html(originalHtml).removeClass('editing');
+                                return;
+                            }
+                            
+                            CAMS.table.updateISIN(recordId, newValue, $element, originalHtml, uniqueId);
+                        });
+                    });
+                },
+
+                updateISIN: function(recordId, newValue, $element, originalHtml, uniqueId) {
+                    const updateId = CAMS.utils.generateUniqueId('isin_update');
+                    
+                    console.log('Updating ISIN:', {
+                        updateId: updateId,
+                        uniqueId: uniqueId,
+                        recordId: recordId,
+                        newValue: newValue
+                    });
+                    
+                    $.ajax({
+                        url: CAMS.config.apiEndpoints.updateIsin,
+                        method: 'POST',
+                        headers: { 
+                            'X-CSRFToken': CAMS.utils.getCookie('csrftoken'),
+                            'X-Update-ID': updateId,
+                            'X-Unique-ID': uniqueId
+                        },
+                        data: JSON.stringify({ 
+                            id: recordId, 
+                            isin: newValue,
+                            update_id: updateId,
+                            session_id: CAMS.state.sessionId
+                        }),
+                        contentType: 'application/json',
+                        timeout: CAMS.config.ajaxTimeout,
+                        success: function(response) {
+                            console.log('ISIN update response:', updateId, response);
+                            
+                            if (response.success) {
+                                $element.html(newValue)
+                                       .data('isin-value', newValue)
+                                       .removeClass('editing')
+                                       .addClass('text-success')
+                                       .attr('title', `ISIN updated successfully at ${CAMS.utils.getCurrentDateTime()}`);
+                                
+                                // Remove success highlight after animation
+                                setTimeout(() => {
+                                    $element.removeClass('text-success');
+                                }, 2000);
+                                
+                                CAMS.notifications.showToast('ISIN updated successfully', 'success');
+                                
+                                // Reload table to reflect changes
+                                CAMS.state.table.ajax.reload(null, false);
+                            } else {
+                                CAMS.notifications.showToast(response.error || 'Failed to update ISIN', 'error');
+                                $element.html(originalHtml).removeClass('editing');
+                            }
+                        },
+                        error: function(xhr, error, thrown) {
+                            console.error('ISIN update error:', updateId, error, xhr.responseText);
+                            CAMS.notifications.showToast('Error updating ISIN: ' + error, 'error');
+                            $element.html(originalHtml).removeClass('editing');
+                        }
+                    });
+                }
+            },
+
+            // Download Management
+            downloads: {
+                downloadSummary: function() {
+                    const downloadId = CAMS.utils.generateUniqueId('download_summary');
+                    const filterData = CAMS.filters.getAllFilterData();
+                    const params = new URLSearchParams();
+                    
+                    // Add download tracking
+                    filterData.download_id = downloadId;
+                    filterData.download_type = 'summary';
+                    
+                    // Add all filter parameters
+                    Object.keys(filterData).forEach(key => {
+                        if (filterData[key]) {
+                            params.append(key, filterData[key]);
+                        }
+                    });
+                    
+                    const downloadUrl = CAMS.config.apiEndpoints.downloadSummary + '?' + params.toString();
+                    
+                    console.log('Starting summary download:', downloadId, downloadUrl);
+                    
+                    CAMS.notifications.showToast('Preparing summary download...', 'info');
+                    
+                    // Create unique download link
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = downloadUrl;
+                    downloadLink.download = `CAMS_Summary_${downloadId}_${new Date().getTime()}.xlsx`;
+                    downloadLink.target = '_blank';
+                    downloadLink.style.display = 'none';
+                    
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+                    
+                    setTimeout(() => {
+                        CAMS.notifications.showToast('Summary download initiated', 'success');
+                    }, 1000);
+                },
+
+                downloadDetail: function(month, year, type = 'current') {
+                    const downloadId = CAMS.utils.generateUniqueId('download_detail');
+                    const filterData = CAMS.filters.getAllFilterData();
+                    const params = new URLSearchParams();
+                    
+                    // Add download tracking
+                    filterData.download_id = downloadId;
+                    filterData.download_type = `detail-${type}`;
+                    
+                    // Add month and year
+                    params.append('month', month);
+                    params.append('year', year);
+                    
+                    // Add relevant filters for detail view
+                    ['entity_filter', 'isin_filter', 'scheme_filter', 'session_id'].forEach(key => {
+                        if (filterData[key]) {
+                            params.append(key, filterData[key]);
+                        }
+                    });
+                    
+                    params.append('download_id', downloadId);
+                    params.append('download_type', `detail-${type}`);
+                    
+                    const downloadUrl = CAMS.config.apiEndpoints.downloadDetail + '?' + params.toString();
+                    const monthName = CAMS.utils.getMonthName(month);
+                    
+                    console.log('Starting detail download:', downloadId, {
+                        month: month,
+                        year: year,
+                        type: type,
+                        url: downloadUrl
+                    });
+                    
+                    CAMS.notifications.showToast(`Preparing ${monthName} ${year} detail download...`, 'info');
+                    
+                    // Create unique download link
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = downloadUrl;
+                    downloadLink.download = `CAMS_Detail_${monthName}_${year}_${downloadId}_${new Date().getTime()}.xlsx`;
+                    downloadLink.target = '_blank';
+                    downloadLink.style.display = 'none';
+                    
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+                    
+                    setTimeout(() => {
+                        CAMS.notifications.showToast(`Detail download for ${monthName} ${year} initiated`, 'success');
+                    }, 1000);
+                }
+            },
+
+            // Notification System
+            notifications: {
+                toastQueue: [],
+                currentToast: null,
+
+                showToast: function(message, type = 'info', duration = 5000) {
+                    const toastId = CAMS.utils.generateUniqueId('toast');
+                    const timestamp = CAMS.utils.getCurrentDateTime();
+                    
+                    // Queue the toast if one is currently showing
+                    if (this.currentToast) {
+                        this.toastQueue.push({ message, type, duration, toastId, timestamp });
+                        return;
+                    }
+                    
+                    this.displayToast(message, type, duration, toastId, timestamp);
+                },
+
+                displayToast: function(message, type, duration, toastId, timestamp) {
+                    const iconMap = {
+                        success: 'bi-check-circle-fill text-success',
+                        error: 'bi-exclamation-triangle-fill text-danger',
+                        warning: 'bi-exclamation-triangle-fill text-warning',
+                        info: 'bi-info-circle-fill text-primary'
+                    };
+                    
+                    const titleMap = {
+                        success: 'Success',
+                        error: 'Error',
+                        warning: 'Warning',
+                        info: 'Information'
+                    };
+                    
+                    $('#cams-toast-icon').attr('class', `bi ${iconMap[type] || iconMap.info} me-2`);
+                    $('#cams-toast-title').text(`CAMS ${titleMap[type] || titleMap.info}`);
+                    $('#cams-toast-time').text(timestamp);
+                    $('#cams-toast-body').text(message);
+                    $('#cams-toast').attr('data-toast-id', toastId);
+                    
+                    const toast = new bootstrap.Toast(document.getElementById('cams-toast'), {
+                        delay: duration
+                    });
+                    
+                    this.currentToast = toast;
+                    
+                    // Handle toast hidden event
+                    $('#cams-toast').off('hidden.bs.toast.cams').on('hidden.bs.toast.cams', () => {
+                        this.currentToast = null;
+                        
+                        // Show next toast in queue
+                        if (this.toastQueue.length > 0) {
+                            const nextToast = this.toastQueue.shift();
+                            setTimeout(() => {
+                                this.displayToast(
+                                    nextToast.message,
+                                    nextToast.type,
+                                    nextToast.duration,
+                                    nextToast.toastId,
+                                    nextToast.timestamp
+                                );
+                            }, 500);
+                        }
+                    });
+                    
+                    toast.show();
+                    
+                    console.log('Toast displayed:', {
+                        id: toastId,
+                        message: message,
+                        type: type,
+                        timestamp: timestamp
+                    });
+                }
+            },
+
+            // Event Handlers
+            events: {
+                initFilters: function() {
+                    // Apply filters button
+                    $('#cams-apply-filters').off('click.cams').on('click.cams', function() {
+                        console.log('Apply filters clicked - Session:', CAMS.state.sessionId);
+                        CAMS.filters.applyFilters();
+                    });
+
+                    // Reset filters button
+                    $('#cams-reset-filters').off('click.cams').on('click.cams', function() {
+                        console.log('Reset filters clicked - Session:', CAMS.state.sessionId);
+                        CAMS.filters.resetAllFilters();
+                        
+                        if (CAMS.state.table) {
+                            CAMS.state.table.ajax.reload();
+                            setTimeout(() => {
+                                CAMS.stats.forceUpdateStats();
+                            }, CAMS.config.statsUpdateDelay);
+                        }
+                    });
+
+                    // Column search with debouncing
+                    $('.cams-column-search').off('keyup.cams change.cams').on('keyup.cams change.cams', function() {
+                        const $input = $(this);
+                        const columnIndex = $input.data('column-index');
+                        const searchType = $input.data('search-type');
+                        const value = $input.val();
+                        
+                        console.log('Column search:', {
+                            columnIndex: columnIndex,
+                            searchType: searchType,
+                            value: value,
+                            session: CAMS.state.sessionId
+                        });
+                        
+                        // Clear previous timeout for this column
+                        clearTimeout(CAMS.state.searchTimeouts[columnIndex]);
+                        
+                        CAMS.state.searchTimeouts[columnIndex] = setTimeout(() => {
+                            if (CAMS.state.table) {
+                                CAMS.state.table.ajax.reload();
+                                setTimeout(() => {
+                                    CAMS.stats.forceUpdateStats();
+                                }, CAMS.config.statsUpdateDelay);
+                            }
+                        }, CAMS.config.debounceDelay);
+                    });
+
+                    // Global search handler
+                    $(document).off('keyup.cams', `${CAMS.config.tableId}_filter input`).on('keyup.cams', `${CAMS.config.tableId}_filter input`, function() {
+                        const searchValue = $(this).val();
+                        console.log('Global search:', searchValue, 'Session:', CAMS.state.sessionId);
+                        
+                        setTimeout(() => {
+                            CAMS.stats.forceUpdateStats();
+                        }, CAMS.config.statsUpdateDelay);
+                    });
+                },
+
+                initDownloads: function() {
+                    // Summary download
+                    $('#cams-download-summary').off('click.cams').on('click.cams', function() {
+                        console.log('Summary download requested - Session:', CAMS.state.sessionId);
+                        CAMS.downloads.downloadSummary();
+                    });
+
+                    // Previous month detail download
+                    $('#cams-download-detail-previous').off('click.cams').on('click.cams', function() {
+                        const previousMonth = CAMS.utils.getPreviousMonth();
+                        console.log('Previous month detail download requested:', previousMonth, 'Session:', CAMS.state.sessionId);
+                        CAMS.downloads.downloadDetail(previousMonth.month, previousMonth.year, 'previous');
+                    });
+
+                    // Current month detail download
+                    $('#cams-download-detail-current').off('click.cams').on('click.cams', function() {
+                        const currentMonth = CAMS.utils.getCurrentMonth();
+                        console.log('Current month detail download requested:', currentMonth, 'Session:', CAMS.state.sessionId);
+                        CAMS.downloads.downloadDetail(currentMonth.month, currentMonth.year, 'current');
+                    });
+                },
+
+                initMiscellaneous: function() {
+                    // Save filters functionality
+                    $('#cams-save-filters').off('click.cams').on('click.cams', function() {
+                        const filterData = CAMS.filters.getAllFilterData();
+                        const filterKey = `cams_saved_filters_${CAMS.state.sessionId}`;
+                        
+                        // Save to sessionStorage for this session only
+                        try {
+                            sessionStorage.setItem(filterKey, JSON.stringify({
+                                filters: filterData,
+                                savedAt: new Date().toISOString(),
+                                sessionId: CAMS.state.sessionId
+                            }));
+                            
+                            CAMS.notifications.showToast('Current filters saved for this session', 'success');
+                            console.log('Filters saved:', filterKey, filterData);
+                        } catch (error) {
+                            console.error('Failed to save filters:', error);
+                            CAMS.notifications.showToast('Failed to save filters', 'error');
+                        }
+                    });
+
+                    // Keyboard shortcuts
+                    $(document).off('keydown.cams').on('keydown.cams', function(e) {
+                        // Ctrl/Cmd + Enter to apply filters
+                        if ((e.ctrlKey || e.metaKey) && e.which === 13) {
+                            e.preventDefault();
+                            CAMS.filters.applyFilters();
+                        }
+                        
+                        // Ctrl/Cmd + R to reset filters (prevent default browser refresh)
+                        if ((e.ctrlKey || e.metaKey) && e.which === 82 && e.target.classList.contains('cams-filter-input')) {
+                            e.preventDefault();
+                            CAMS.filters.resetAllFilters();
+                        }
+                    });
+                }
+            },
+
+            // Initialization
+            init: function() {
+                console.log('Initializing CAMS Dashboard with session:', this.state.sessionId);
+                
+                // Set up AJAX defaults with unique session tracking
+                $.ajaxSetup({
+                    beforeSend: function(xhr, settings) {
+                        if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+                            xhr.setRequestHeader("X-CSRFToken", CAMS.utils.getCookie('csrftoken'));
+                            xhr.setRequestHeader("X-Session-ID", CAMS.state.sessionId);
+                        }
+                    },
+                    timeout: CAMS.config.ajaxTimeout
+                });
+
+                // Initialize components in order
+                this.table.initDataTable();
+                this.events.initFilters();
+                this.events.initDownloads();
+                this.events.initMiscellaneous();
+                
+                // Load initial statistics
+                setTimeout(() => {
+                    this.stats.forceUpdateStats();
+                }, 1000);
+                
+                // Set up periodic stats refresh (every 5 minutes)
+                setInterval(() => {
+                    if (!this.state.isStatsLoading) {
+                        this.stats.forceUpdateStats();
+                    }
+                }, 300000);
+                
+                console.log('CAMS Dashboard initialized successfully');
+                this.notifications.showToast('CAMS Dashboard loaded successfully', 'success', 3000);
+            }
+        };
+
+        // Initialize when DOM is ready
+        $(document).ready(function() {
+            // Ensure unique namespace
+            if (window.CAMS_INITIALIZED) {
+                console.warn('CAMS Dashboard already initialized, skipping...');
+                return;
+            }
+            
+            window.CAMS_INITIALIZED = true;
+            window.CAMS_INSTANCE = CAMS;
+            
+            CAMS.init();
+        });
+        
+    </script>
+</body>
+</html>

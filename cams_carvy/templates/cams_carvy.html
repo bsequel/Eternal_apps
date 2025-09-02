@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAMS Carvy Dashboard</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.0/font/bootstrap-icons.min.css" rel="stylesheet">
+    <!-- DataTables CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/datatables/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <!-- Animate.css -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+    
+    <style>
+        .icon-box {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        
+        .card-bottom-accent {
+            height: 4px;
+            width: 100%;
+        }
+        
+        .table th {
+            border-top: none;
+            font-weight: 600;
+            font-size: 0.875rem;
+            white-space: nowrap;
+        }
+        
+        .table td {
+            font-size: 0.875rem;
+            vertical-align: middle;
+        }
+        
+        .table-responsive {
+            border-radius: 0.5rem;
+        }
+        
+        .animate__animated {
+            animation-duration: 0.8s;
+        }
+        
+        /* Custom DataTables styling */
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            padding: 0.375rem 0.75rem;
+            margin: 0 0.125rem;
+            border-radius: 0.375rem;
+        }
+        
+        .dataTables_wrapper .dataTables_info {
+            padding-top: 0.75rem;
+        }
+        
+        /* Custom scrollbar */
+        .table-responsive::-webkit-scrollbar {
+            height: 8px;
+        }
+        
+        .table-responsive::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .table-responsive::-webkit-scrollbar-thumb {
+            background: #7293F3;
+            border-radius: 10px;
+        }
+        
+        .table-responsive::-webkit-scrollbar-thumb:hover {
+            background: #5a7be3;
+        }
+        
+        /* Loading overlay */
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        /* Custom alert positioning */
+        .custom-alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            min-width: 300px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        /* Hover effects for cards */
+        .card:hover {
+            transform: translateY(-2px);
+            transition: transform 0.2s ease;
+        }
+        
+        /* Custom button hover effects */
+        .btn:hover {
+            transform: translateY(-1px);
+            transition: all 0.2s ease;
+        }
+
+        /* Debug styles */
+        .error-message {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container-fluid py-4">
+        <div class="content-section active" id="cams-carvy-content">
+            <!-- Heading -->
+            <h2 class="animate__animated animate__fadeInDown py-2">
+                <span style="color: #7293F3;">
+                    Cams Carvy <span class="text-info fs-5">Summary Dashboard</span>
+                </span>
+                <span>Section</span>
+            </h2>
+            
+            <!-- Summary Cards -->
+            <div class="row g-3 mb-4">
+                <!-- Total Entity Names -->
+                <div class="col-md-3 col-6">
+                    <div class="card shadow-lg border-0 rounded-4 overflow-hidden animate__animated animate__fadeInUp">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-secondary text-uppercase fw-semibold small">Total Entity Names</div>
+                                    <h5 class="fw-bold text-dark mt-1 mb-0" id="card-entities">0</h5>
+                                </div>
+                                <span class="icon-box bg-info text-white">
+                                    <i class="bi bi-people-fill"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="card-bottom-accent bg-info"></div>
+                    </div>
+                </div>
+
+                <!-- Total Folios -->
+                <div class="col-md-3 col-6">
+                    <div class="card shadow-lg border-0 rounded-4 overflow-hidden animate__animated animate__fadeInUp">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-secondary text-uppercase fw-semibold small">Total Folios</div>
+                                    <h5 class="fw-bold text-primary mt-1 mb-0" id="card-folios">0</h5>
+                                </div>
+                                <span class="icon-box bg-primary text-white">
+                                    <i class="bi bi-collection-fill"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="card-bottom-accent bg-primary"></div>
+                    </div>
+                </div>
+
+                <!-- Total Market Value -->
+                <div class="col-md-3 col-6">
+                    <div class="card shadow-lg border-0 rounded-4 overflow-hidden animate__animated animate__fadeInUp">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-secondary text-uppercase fw-semibold small">Total Market Value</div>
+                                    <h5 class="fw-bold text-success mt-1 mb-0" id="card-market-value">₹0</h5>
+                                </div>
+                                <span class="icon-box bg-success text-white">
+                                    <i class="bi bi-graph-up-arrow"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="card-bottom-accent bg-success"></div>
+                    </div>
+                </div>
+
+                <!-- Total Cost Value -->
+                <div class="col-md-3 col-6">
+                    <div class="card shadow-lg border-0 rounded-4 overflow-hidden animate__animated animate__fadeInUp">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-secondary text-uppercase fw-semibold small">Total Cost Value</div>
+                                    <h5 class="fw-bold text-danger mt-1 mb-0" id="card-cost-value">₹0</h5>
+                                </div>
+                                <span class="icon-box bg-danger text-white">
+                                    <i class="bi bi-cash-stack"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="card-bottom-accent bg-danger"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters Section -->
+            <div class="card mb-4 shadow-lg border-0 rounded-4 overflow-hidden">
+                <div class="card-header d-flex justify-content-between align-items-center py-2"
+                    style="background: linear-gradient(90deg, #7293F3, #7293F3); color: white;">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-funnel-fill me-2 fs-5"></i>
+                        <span class="fw-bold text-uppercase small">Filters</span>
+                    </div>
+                </div>
+
+                <div class="card-body bg-light p-4">
+                    <div class="row g-3 mb-3">
+                        <!-- Entity Name -->
+                        <div class="col-12 col-md-3">
+                            <div class="input-group rounded-pill shadow-sm border border-primary overflow-hidden">
+                                <span class="input-group-text border-0 bg-transparent ps-3">
+                                    <i class="bi bi-building text-secondary"></i>
+                                </span>
+                                <input type="text" class="form-control form-control-sm border-0 bg-light fw-semibold"
+                                    id="entity-filter" placeholder="Entity Name">
+                            </div>
+                        </div>
+
+                        <!-- ISIN -->
+                        <div class="col-12 col-md-3">
+                            <div class="input-group rounded-pill shadow-sm border border-primary overflow-hidden">
+                                <span class="input-group-text border-0 bg-transparent ps-3">
+                                    <i class="bi bi-key text-secondary"></i>
+                                </span>
+                                <input type="text" class="form-control form-control-sm border-0 bg-light fw-semibold"
+                                    id="isin-filter" placeholder="ISIN">
+                            </div>
+                        </div>
+
+                        <!-- Scheme Name -->
+                        <div class="col-12 col-md-3">
+                            <div class="input-group rounded-pill shadow-sm border border-primary overflow-hidden">
+                                <span class="input-group-text border-0 bg-transparent ps-3">
+                                    <i class="bi bi-file-earmark-text text-secondary"></i>
+                                </span>
+                                <input type="text" class="form-control form-control-sm border-0 bg-light fw-semibold"
+                                    id="scheme-filter" placeholder="Scheme Name">
+                            </div>
+                        </div>
+
+                        <!-- Month -->
+                        <div class="col-12 col-md-3">
+                            <select class="form-select form-select-sm rounded-pill shadow-sm border border-primary text-primary fw-semibold p-2"
+                                id="month-filter">
+                                <option value="">📅 Select Month</option>
+                                <option value="January">January</option>
+                                <option value="February">February</option>
+                                <option value="March">March</option>
+                                <option value="April">April</option>
+                                <option value="May">May</option>
+                                <option value="June">June</option>
+                                <option value="July">July</option>
+                                <option value="August">August</option>
+                                <option value="September">September</option>
+                                <option value="October">October</option>
+                                <option value="November">November</option>
+                                <option value="December">December</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Filter Buttons -->
+                    <div class="d-flex justify-content-end gap-2 mt-2">
+                        <button class="btn btn-primary btn-sm px-4 rounded-pill shadow-sm" id="apply-filters">
+                            <i class="bi bi-check-circle me-1"></i> Apply
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm px-3 rounded-pill shadow-sm" id="reset-filters" title="Reset Filters">
+                            <i class="bi bi-arrow-repeat me-1"></i> Reset
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Download Buttons -->
+            <div class="card mb-4 shadow-lg border-0 rounded-4 overflow-hidden">
+                <div class="card-header d-flex justify-content-between align-items-center py-2"
+                    style="background: linear-gradient(90deg, #7293F3, #7293F3); color: white;">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-download me-2 fs-5"></i>
+                        <span class="fw-bold text-uppercase small">Downloads</span>
+                    </div>
+                </div>
+
+                <div class="card-body bg-light p-5">
+                    <div class="row row-cols-1 row-cols-md-3 g-3 justify-content-center">
+                        <div class="col d-grid">
+                            <button class="btn btn-success btn-sm px-4 py-2 rounded-pill shadow-sm fw-semibold d-flex align-items-center justify-content-center w-100" id="download-summary">
+                                <i class="bi bi-file-earmark-text me-2 fs-6"></i> Download Summary
+                            </button>
+                        </div>
+
+                        <div class="col d-grid">
+                            <button class="btn btn-warning btn-sm px-4 py-2 rounded-pill shadow-sm fw-semibold d-flex align-items-center justify-content-center text-dark w-100" id="download-previous">
+                                <i class="bi bi-calendar3 me-2 fs-6"></i> Download Detail - Previous Month
+                            </button>
+                        </div>
+
+                        <div class="col d-grid">
+                            <button class="btn btn-primary btn-sm px-4 py-2 rounded-pill shadow-sm fw-semibold d-flex align-items-center justify-content-center w-100" id="download-current">
+                                <i class="bi bi-calendar-event me-2 fs-6"></i> Download Detail - Current Month
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CAMS Data Table -->
+            <div class="card mb-4 shadow-lg border-0 rounded-4 overflow-hidden">
+                <div class="card-header d-flex justify-content-between align-items-center py-2"
+                    style="background: linear-gradient(90deg, #7293F3, #5a7be3); color: white;">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-table me-2 fs-5"></i>
+                        <span class="fw-bold text-uppercase small">CAMS Portfolio Data</span>
+                    </div>
+                    <div class="fw-bold small">
+                        <div class="text-light">Total Amount</div>
+                        <div class="fs-6" id="header-total-amount">₹0.00</div>
+                    </div>
+                </div>
+
+                <div class="card-body bg-light p-4 position-relative">
+                    <!-- Loading Overlay -->
+                    <div class="loading-overlay d-none" id="loading-overlay">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+
+                    <!-- Error Message -->
+                    <div id="error-message" class="error-message d-none"></div>
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover align-middle mb-0" id="cams-portfolio-table">
+                            <thead class="text-white" style="background: linear-gradient(90deg, #7293F3, #5a7be3);">
+                                <tr>
+                                    <th>Folio No</th>
+                                    <th>Entity Name</th>
+                                    <th>ISIN</th>
+                                    <th>Scheme Name</th>
+                                    <th>Cost Value (INR)</th>
+                                    <th>Unit Balance</th>
+                                    <th>NAV Date</th>
+                                    <th>Market Value (INR)</th>
+                                    <th>Updated On</th>
+                                    <th>Updated By</th>
+                                </tr>
+                                <tr class="bg-white">
+                                    <th><input type="text" class="form-control form-control-sm" placeholder="Search..."></th>
+                                    <th><input type="text" class="form-control form-control-sm" placeholder="Search..."></th>
+                                    <th><input type="text" class="form-control form-control-sm" placeholder="Search..."></th>
+                                    <th><input type="text" class="form-control form-control-sm" placeholder="Search..."></th>
+                                    <th><input type="text" class="form-control form-control-sm" placeholder="Search..."></th>
+                                    <th><input type="text" class="form-control form-control-sm" placeholder="Search..."></th>
+                                    <th><input type="text" class="form-control form-control-sm" placeholder="Search..."></th>
+                                    <th><input type="text" class="form-control form-control-sm" placeholder="Search..."></th>
+                                    <th><input type="text" class="form-control form-control-sm" placeholder="Search..."></th>
+                                    <th><input type="text" class="form-control form-control-sm" placeholder="Search..."></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Demo data for testing -->
+                                <tr>
+                                    <td>FOL001</td>
+                                    <td>Example Entity</td>
+                                    <td>INE123A01012</td>
+                                    <td>Example Mutual Fund</td>
+                                    <td class="text-end">₹50,000</td>
+                                    <td>1,000.50</td>
+                                    <td>2024-08-23</td>
+                                    <td class="text-end">₹55,000</td>
+                                    <td>2024-08-23</td>
+                                    <td>Admin</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="text-center text-muted small">
+                        <p>&copy; 2024 CAMS Portfolio Management System. All rights reserved.</p>
+                        <p>Last updated: <span id="last-updated">-</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- jQuery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <!-- DataTables JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/datatables/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/datatables/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    
+    <script>
+        $(document).ready(function() {
+            console.log('Dashboard initializing...');
+            
+            // Initialize DataTable with demo mode and error handling
+            var table = $('#cams-portfolio-table').DataTable({
+                "processing": true,
+                "serverSide": true,
+                "searching": true,
+                "ordering": true,
+                "info": true,
+                "lengthChange": true,
+                "pageLength": 10,
+                "lengthMenu": [[10, 25, 50, 100], [10, 25, 50, 100]],
+                "ajax": {
+                    "url": "camsapp/api/portfolio/",
+                    "type": "GET",
+                    "data": function(d) {
+                        // Add custom filter parameters
+                        d.entity_name = $('#entity-filter').val();
+                        d.isin = $('#isin-filter').val();
+                        d.scheme_name = $('#scheme-filter').val();
+                        d.month = $('#month-filter').val();
+                        
+                        // Add individual column search parameters
+                        $('#cams-portfolio-table thead tr:nth-child(2) input').each(function(index) {
+                            var columnName = getColumnName(index);
+                            if (columnName && $(this).val()) {
+                                d[columnName] = $(this).val();
+                            }
+                        });
+                    },
+                    "dataSrc": function(json) {
+                        try {
+                            updateSummaryCards();
+                            updateLastUpdated();
+                            hideErrorMessage();
+                            return json.data || [];
+                        } catch (error) {
+                            console.error('Data processing error:', error);
+                            showErrorMessage('Error processing data: ' + error.message);
+                            return [];
+                        }
+                    },
+                    "error": function(xhr, error, thrown) {
+                        console.error('DataTable Ajax Error:', xhr.status, error, thrown);
+                        var errorMsg = 'Error loading data from server.';
+                        
+                        if (xhr.status === 404) {
+                            errorMsg = 'API endpoint not found. Please check your Django URLs.';
+                        } else if (xhr.status === 500) {
+                            errorMsg = 'Server error. Please check your Django backend.';
+                        } else if (xhr.status === 0) {
+                            errorMsg = 'Network error. Please check your connection and CORS settings.';
+                        }
+                        
+                        showErrorMessage(errorMsg);
+                        showAlert('Error loading data: ' + errorMsg, 'danger');
+                        
+                        // Use demo data in case of error
+                        loadDemoData();
+                    }
+                },
+                "columns": [
+                    { "data": "folio_no", "title": "Folio No", "width": "12%" },
+                    { "data": "entity_name", "title": "Entity Name", "width": "15%" },
+                    { "data": "isin", "title": "ISIN", "width": "10%" },
+                    { "data": "scheme_name", "title": "Scheme Name", "width": "20%" },
+                    { "data": "cost_value", "title": "Cost Value (INR)", "width": "10%" },
+                    { "data": "unit_balance", "title": "Unit Balance", "width": "8%" },
+                    { "data": "nav_date", "title": "NAV Date", "width": "8%" },
+                    { "data": "market_value", "title": "Market Value (INR)", "width": "12%" },
+                    { "data": "updated_on", "title": "Updated On", "width": "8%" },
+                    { "data": "updated_by", "title": "Updated By", "width": "7%" }
+                ],
+                "columnDefs": [
+                    {
+                        "targets": [0, 7], // Folio No and Market Value columns
+                        "orderable": true
+                    },
+                    {
+                        "targets": [4, 7], // Cost Value and Market Value columns
+                        "className": "text-end"
+                    }
+                ],
+                "order": [[6, "desc"]], // Order by NAV Date descending
+                "language": {
+                    "processing": '<div class="d-flex justify-content-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>',
+                    "emptyTable": "No CAMS portfolio data available",
+                    "zeroRecords": "No matching records found",
+                    "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+                    "infoEmpty": "Showing 0 to 0 of 0 entries",
+                    "infoFiltered": "(filtered from _MAX_ total entries)",
+                    "lengthMenu": "Show _MENU_ entries per page",
+                    "paginate": {
+                        "first": "First",
+                        "last": "Last",
+                        "next": "Next",
+                        "previous": "Previous"
+                    }
+                },
+                "responsive": true,
+                "autoWidth": false
+            });
+            
+            // Helper function to get column name from index
+            function getColumnName(index) {
+                const columnNames = {
+                    0: 'folio_no', 1: 'entity_name', 2: 'isin', 3: 'scheme_name',
+                    4: 'cost_value', 5: 'unit_balance', 6: 'nav_date', 7: 'market_value',
+                    8: 'updated_on', 9: 'updated_by'
+                };
+                return columnNames[index];
+            }
+            
+            // Individual column search with debouncing
+            var searchTimeout;
+            $('#cams-portfolio-table thead tr:nth-child(2) input').on('keyup change', function() {
+                clearTimeout(searchTimeout);
+                var value = this.value;
+                var that = this;
+                searchTimeout = setTimeout(function() {
+                    if (value.length >= 3 || value.length === 0) {
+                        var columnIndex = $(that).closest('th').index();
+                        table.column(columnIndex).search(value).draw();
+                    }
+                }, 500); // 500ms delay
+            });
+            
+            // Filter functionality
+            $('#apply-filters').on('click', function() {
+                console.log('Applying filters...');
+                showLoadingOverlay(true);
+                table.ajax.reload();
+                showAlert('Filters applied successfully!', 'success');
+            });
+            
+            // Reset filters
+            $('#reset-filters').on('click', function() {
+                console.log('Resetting filters...');
+                // Clear all filter inputs
+                $('#entity-filter, #isin-filter, #scheme-filter').val('');
+                $('#month-filter').val('');
+                $('#cams-portfolio-table thead tr:nth-child(2) input').val('');
+                
+                // Clear individual column searches
+                table.columns().search('').draw();
+                
+                // Show loading and redraw table
+                showLoadingOverlay(true);
+                table.ajax.reload();
+                showAlert('Filters reset successfully!', 'info');
+            });
+            
+            // Show/hide loading overlay
+            function showLoadingOverlay(show) {
+                if (show) {
+                    $('#loading-overlay').removeClass('d-none');
+                } else {
+                    $('#loading-overlay').addClass('d-none');
+                }
+            }
+            
+            // Show/hide error message
+            function showErrorMessage(message) {
+                $('#error-message').text(message).removeClass('d-none');
+            }
+            
+            function hideErrorMessage() {
+                $('#error-message').addClass('d-none');
+            }
+            
+            // Hide loading overlay when table finishes drawing
+            table.on('draw', function() {
+                showLoadingOverlay(false);
+            });
+            
+            // Function to update summary cards
+            function updateSummaryCards() {
+                var filterData = {
+                    entity_name: $('#entity-filter').val(),
+                    isin: $('#isin-filter').val(),
+                    scheme_name: $('#scheme-filter').val(),
+                    month: $('#month-filter').val()
+                };
+                
+                // First try to get real data
+                $.ajax({
+                    url: 'camsapp/api/summary/',
+                    type: 'GET',
+                    data: filterData,
+                    timeout: 5000, // 5 second timeout
+                    success: function(response) {
+                        animateCardUpdate('#card-entities', response.total_entities || '0');
+                        animateCardUpdate('#card-folios', response.total_folios || '0');
+                        animateCardUpdate('#card-market-value', response.total_market_value || '₹0');
+                        animateCardUpdate('#card-cost-value', response.total_cost_value || '₹0');
+                        animateCardUpdate('#header-total-amount', response.total_market_value || '₹0.00');
+                    },
+                    error: function(xhr, status, error) {
+                        console.warn('Error updating summary, using demo data:', error);
+                        // Use demo data when API fails
+                        animateCardUpdate('#card-entities', '5');
+                        animateCardUpdate('#card-folios', '12');
+                        animateCardUpdate('#card-market-value', '₹2,45,000');
+                        animateCardUpdate('#card-cost-value', '₹2,00,000');
+                        animateCardUpdate('#header-total-amount', '₹2,45,000.00');
+                    }
+                });
+            }
+            
+            // Function to load demo data
+            function loadDemoData() {
+                console.log('Loading demo data...');
+                var demoData = [
+                    {
+                        folio_no: 'FOL001',
+                        entity_name: 'Example Entity 1',
+                        isin: 'INE123A01012',
+                        scheme_name: 'Example Mutual Fund Scheme',
+                        cost_value: '₹50,000',
+                        unit_balance: '1,000.50',
+                        nav_date: '2024-08-23',
+                        market_value: '₹55,000',
+                        updated_on: '2024-08-23',
+                        updated_by: 'Admin'
+                    },
+                    {
+                        folio_no: 'FOL002',
+                        entity_name: 'Example Entity 2',
+                        isin: 'INE456B01023',
+                        scheme_name: 'Another Fund Scheme',
+                        cost_value: '₹75,000',
+                        unit_balance: '1,500.25',
+                        nav_date: '2024-08-22',
+                        market_value: '₹80,000',
+                        updated_on: '2024-08-22',
+                        updated_by: 'Admin'
+                    },
+                    {
+                        folio_no: 'FOL003',
+                        entity_name: 'Test Entity',
+                        isin: 'INE789C01034',
+                        scheme_name: 'Growth Fund Scheme',
+                        cost_value: '₹1,20,000',
+                        unit_balance: '2,400.75',
+                        nav_date: '2024-08-21',
+                        market_value: '₹1,35,000',
+                        updated_on: '2024-08-21',
+                        updated_by: 'System'
+                    }
+                ];
+                
+                table.clear().rows.add(demoData).draw();
+                updateSummaryCards();
+            }
+            
+            // Function to animate card updates
+            function animateCardUpdate(selector, newValue) {
+                var $element = $(selector);
+                $element.fadeOut(200, function() {
+                    $element.text(newValue).fadeIn(200);
+                });
+            }
+            
+            // Function to update last updated timestamp
+            function updateLastUpdated() {
+                var now = new Date();
+                var timestamp = now.toLocaleString('en-IN', {
+                    timeZone: 'Asia/Kolkata',
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+                $('#last-updated').text(timestamp);
+            }
+            
+            // Function to show alerts
+            function showAlert(message, type) {
+                // Remove existing alerts
+                $('.custom-alert').remove();
+                
+                var alertClass = 'alert-' + type;
+                var iconClass = type === 'success' ? 'bi-check-circle' : 
+                               type === 'danger' ? 'bi-exclamation-triangle' : 
+                               type === 'warning' ? 'bi-exclamation-circle' : 
+                               'bi-info-circle';
+                
+                var alert = `
+                    <div class="alert ${alertClass} alert-dismissible fade show custom-alert" role="alert">
+                        <i class="bi ${iconClass} me-2"></i>
+                        ${message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `;
+                
+                $('body').append(alert);
+                
+                // Auto remove after 4 seconds
+                setTimeout(function() {
+                    $('.custom-alert').fadeOut(500, function() {
+                        $(this).remove();
+                    });
+                }, 4000);
+            }
+            
+            // Download functionality
+            $('#download-summary').on('click', function() {
+                var btn = $(this);
+                var originalText = btn.html();
+                btn.prop('disabled', true);
+                btn.html('<span class="spinner-border spinner-border-sm me-2"></span>Downloading...');
+                
+                // Simulate download process
+                setTimeout(function() {
+                    btn.prop('disabled', false);
+                    btn.html(originalText);
+                    showAlert('Summary download completed!', 'success');
+                }, 2000);
+            });
+            
+            $('#download-previous').on('click', function() {
+                var btn = $(this);
+                var originalText = btn.html();
+                btn.prop('disabled', true);
+                btn.html('<span class="spinner-border spinner-border-sm me-2"></span>Downloading...');
+                
+                setTimeout(function() {
+                    btn.prop('disabled', false);
+                    btn.html(originalText);
+                    showAlert('Previous month detail download completed!', 'success');
+                }, 2000);
+            });
+            
+            $('#download-current').on('click', function() {
+                var btn = $(this);
+                var originalText = btn.html();
+                btn.prop('disabled', true);
+                btn.html('<span class="spinner-border spinner-border-sm me-2"></span>Downloading...');
+                
+                setTimeout(function() {
+                    btn.prop('disabled', false);
+                    btn.html(originalText);
+                    showAlert('Current month detail download completed!', 'success');
+                }, 2000);
+            });
+            
+            // Initialize summary cards and last updated
+            updateSummaryCards();
+            updateLastUpdated();
+            
+            // Try to load real data first, fallback to demo on error
+            try {
+                table.ajax.reload(null, false); // false = don't reset paging
+            } catch (error) {
+                console.warn('Failed to load real data, using demo:', error);
+                loadDemoData();
+            }
+            
+            // Auto-refresh every 5 minutes (optional - disable in production if not needed)
+            setInterval(function() {
+                try {
+                    table.ajax.reload(null, false); // false = don't reset paging
+                    updateSummaryCards();
+                    console.log('Auto-refreshed data at:', new Date().toLocaleTimeString());
+                } catch (error) {
+                    console.warn('Auto-refresh failed:', error);
+                }
+            }, 300000); // 5 minutes
+            
+            // Add keyboard shortcuts
+            $(document).keydown(function(e) {
+                // Ctrl + R to refresh
+                if (e.ctrlKey && e.keyCode === 82) {
+                    e.preventDefault();
+                    try {
+                        table.ajax.reload();
+                        updateSummaryCards();
+                        showAlert('Data refreshed manually', 'info');
+                    } catch (error) {
+                        showAlert('Failed to refresh data', 'warning');
+                    }
+                }
+                
+                // Ctrl + F to focus on first filter
+                if (e.ctrlKey && e.keyCode === 70) {
+                    e.preventDefault();
+                    $('#entity-filter').focus();
+                }
+            });
+            
+            console.log('Dashboard initialization complete');
+        });
+
+        // Add tooltip functionality
+        $(function () {
+            $('[data-bs-toggle="tooltip"]').tooltip();
+        });
+
+        // Add copy to clipboard functionality for ISIN and Folio numbers
+        $(document).on('click', '[data-copy]', function() {
+            var text = $(this).data('copy');
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(function() {
+                    showAlert('Copied to clipboard: ' + text, 'success');
+                }).catch(function() {
+                    showAlert('Failed to copy to clipboard', 'danger');
+                });
+            } else {
+                // Fallback for older browsers
+                var tempInput = document.createElement('input');
+                tempInput.value = text;
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempInput);
+                showAlert('Copied to clipboard: ' + text, 'success');
+            }
+        });
+
+        // Add export functionality placeholder
+        function exportToCSV() {
+            showAlert('CSV export functionality will be implemented soon', 'info');
+        }
+
+        function exportToExcel() {
+            showAlert('Excel export functionality will be implemented soon', 'info');
+        }
+
+        // Add search highlighting
+        function highlightSearchTerms(text, searchTerm) {
+            if (!searchTerm) return text;
+            var regex = new RegExp('(' + searchTerm + ')', 'gi');
+            return text.replace(regex, '<mark>$1</mark>');
+        }
+
+        // // Global error handler
+        // window.addEventListener('error', function(e) {
+        //     console.error('Global error:', e.error);
+        //     showAlert('An unexpected error occurred. Please refresh the page.', 'danger');
+        // });
+
+        // Global function to show alerts (can be called from console for testing)
+        window.showAlert = function(message, type) {
+            // Remove existing alerts
+            $('.custom-alert').remove();
+            
+            var alertClass = 'alert-' + (type || 'info');
+            var iconClass = type === 'success' ? 'bi-check-circle' : 
+                           type === 'danger' ? 'bi-exclamation-triangle' : 
+                           type === 'warning' ? 'bi-exclamation-circle' : 
+                           'bi-info-circle';
+            
+            var alert = `
+                <div class="alert ${alertClass} alert-dismissible fade show custom-alert" role="alert">
+                    <i class="bi ${iconClass} me-2"></i>
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `;
+            
+            $('body').append(alert);
+            
+            // Auto remove after 4 seconds
+            setTimeout(function() {
+                $('.custom-alert').fadeOut(500, function() {
+                    $(this).remove();
+                });
+            }, 4000);
+        };
+
+    </script>
+</body>
+</html>

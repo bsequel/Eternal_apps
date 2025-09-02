@@ -1,0 +1,42 @@
+.logo-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 50px;
+    /* adjust as needed */
+    perspective: 1000px;
+    /* adds 3D depth */
+    background-color: black;
+    border-radius: 50%;
+    box-shadow: rgba(0, 0, 0, 0.45) 0px 25px 20px -20px;
+}
+
+.logo-3d {
+    width: 150px;
+    border-radius: 50%;
+    height: auto;
+    animation: spin3D 5s linear infinite;
+    /* transform-style: preserve-3d; */
+    /* filter: drop-shadow(0 0 10px #dedede); */
+    /* glowing */
+    /* box-shadow: rgba(0, 0, 0, 0.45) 0px 25px 20px -20px; */
+    /* border-radius: 10px; */
+}
+
+@keyframes spin3D {
+  0% {
+    transform: rotateY(0deg) scale(1.05);
+  }
+  20% { /* hold at 0° */
+    transform: rotateY(0deg) scale(1.05);
+  }
+  40% {
+    transform: rotateY(180deg) scale(0);
+  }
+  80% {
+    transform: rotateY(360deg) scale(1.05);
+  }
+  100% { /* hold at 360° */
+    transform: rotateY(360deg) scale(1.05);
+  }
+}

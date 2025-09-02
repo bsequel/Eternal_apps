@@ -1,0 +1,142 @@
+  <div class="dashboard-cards">
+    <div>Total Cases: <span id="total-cases">0</span></div>
+    <div>Pending: <span id="pending-cases">0</span></div>
+    <div>Picked: <span id="picked-cases">0</span></div>
+    <div>Closed: <span id="closed-cases">0</span></div>
+    <div>Fraud ₹: <span id="total-fraud">0</span></div>
+  </div>
+
+  <table id="reports-table" class="display" width="100%">
+    <thead>
+      <tr>
+        <th>S.No</th>
+        <th>Complaint Date</th>
+        <th>Mail Date</th>
+        <th>Month</th>
+        <th>Amount</th>
+        <th>Ref No</th>
+        <th>Station</th>
+        <th>A/c No</th>
+        <th>Name</th>
+        <th>Mobile</th>
+        <th>Email ID</th>
+        <th>Status</th>
+        <th>Ageing Days</th>
+        <th>Debited From Bank?</th>
+        <th>Region</th>
+        <th>UTR No</th>
+        <th>UTR Amount</th>
+        <th>Transaction DateTime</th>
+        <th>Total Fraudulent Amount</th>
+        <th>Updated On</th>
+        <th>Updated By</th>
+      </tr>
+      <tr>
+        <!-- Filter inputs below each column -->
+        <th><input type="text" placeholder="Search S.No" /></th>
+        <th><input type="text" placeholder="Search Complaint Date" /></th>
+        <th><input type="text" placeholder="Search Mail Date" /></th>
+        <th><input type="text" placeholder="Search Month" /></th>
+        <th><input type="text" placeholder="Search Amount" /></th>
+        <th><input type="text" placeholder="Search Ref No" /></th>
+        <th><input type="text" placeholder="Search Station" /></th>
+        <th><input type="text" placeholder="Search A/c No" /></th>
+        <th><input type="text" placeholder="Search Name" /></th>
+        <th><input type="text" placeholder="Search Mobile" /></th>
+        <th><input type="text" placeholder="Search Email ID" /></th>
+        <th><input type="text" placeholder="Search Status" /></th>
+        <th><input type="text" placeholder="Search Ageing" /></th>
+        <th><input type="text" placeholder="Search Debited" /></th>
+        <th><input type="text" placeholder="Search Region" /></th>
+        <th><input type="text" placeholder="Search UTR No" /></th>
+        <th><input type="text" placeholder="Search UTR Amount" /></th>
+        <th><input type="text" placeholder="Search Transaction DateTime" /></th>
+        <th><input type="text" placeholder="Search Fraud Amount" /></th>
+        <th></th>
+        <th><input type="text" placeholder="Search Updated By" /></th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    $(document).ready(function () {
+      // Initialize DataTable with ajax source and column filters
+      var table = $('#reports-table').DataTable({
+        ajax: {
+          url: '/api/cyber-reports/',
+          dataSrc: ''
+        },
+        columns: [
+          { data: 'sno' },
+          { data: 'complaint_date' },
+          { data: 'mail_date' },
+          { data: 'mail_month' },
+          { data: 'amount' },
+          { data: 'reference_number' },
+          { data: 'police_station_address' },
+          { data: 'account_number' },
+          { data: 'name' },
+          { data: 'mobile_number' },
+          { data: 'email_id' },
+          { data: 'status' },
+          { data: 'ageing_days' },
+          { data: 'debit_from_bank' },
+          { data: 'region' },
+          { data: 'utr_number' },
+          { data: 'utr_amount' },
+          { data: 'transaction_datetime' },
+          { data: 'total_fraudulent_amount' },
+          { data: 'updated_on' },
+          { data: 'updated_by_username' }
+        ],
+        initComplete: function () {
+          var api = this.api();
+          // For each column add input event for filter
+          api.columns().every(function () {
+            var column = this;
+            $('input', this.header().nextElementSibling).on('keyup change clear', function () {
+              if (column.search() !== this.value) {
+                column.search(this.value).draw();
+              }
+            });
+          });
+        }
+      });
+
+      // Load and update dashboard summary cards (filtered counts)
+      function updateDashboardCards() {
+        $.get('/api/dashboard-summary/', function (data) {
+          $('#total-cases').text(data.total_cases);
+          $('#pending-cases').text(data.pending);
+          $('#picked-cases').text(data.picked);
+          $('#closed-cases').text(data.closed);
+          $('#total-fraud').text('₹' + data.total_fraud);
+        });
+      }
+
+      // On table draw (fresh data loaded or filtered), update cards
+      table.on('draw', function () {
+        // Get filtered rows data
+        let filteredData = table.rows({ search: 'applied' }).data();
+        // Recalculate summary locally based on filtered data:
+        let total_cases = filteredData.length;
+        let pending = 0, picked = 0, closed = 0, total_fraud = 0;
+        for (let i = 0; i < filteredData.length; i++) {
+          let row = filteredData[i];
+          if (row.status === 'pending') pending++;
+          else if (row.status === 'picked') picked++;
+          else if (row.status === 'closed') closed++;
+          total_fraud += parseFloat(row.total_fraudulent_amount) || 0;
+        }
+        // Update cards with filtered summary
+        $('#total-cases').text(total_cases);
+        $('#pending-cases').text(pending);
+        $('#picked-cases').text(picked);
+        $('#closed-cases').text(closed);
+        $('#total-fraud').text('₹' + total_fraud.toFixed(2));
+      });
+
+      updateDashboardCards();
+    });
+  </script>

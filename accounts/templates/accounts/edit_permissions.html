@@ -1,0 +1,342 @@
+<!-- templates/user_management/edit_permissions.html -->
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Dashboard Permissions - {{ user.email }}</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .permission-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .permission-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .user-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px 15px 0 0;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 2rem;
+        }
+        
+        .dashboard-option {
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .dashboard-option:hover {
+            border-color: #667eea;
+            background-color: #f8f9ff;
+        }
+        
+        .dashboard-option.selected {
+            border-color: #28a745;
+            background-color: #f8fff8;
+        }
+        
+        .dashboard-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            opacity: 0.7;
+        }
+        
+        .cyber-cell { color: #007bff; }
+        .bank-balance { color: #6610f2; }
+        .payment-gateway { color: #28a745; }
+        .cams-carvy { color: #fd7e14; }
+        .consolidated { color: #e91e63; }
+        
+        .form-switch {
+            transform: scale(1.2);
+        }
+        
+        .btn-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+            color: white;
+        }
+        
+        .breadcrumb-custom {
+            background: transparent;
+            padding: 0;
+        }
+        
+        .breadcrumb-custom .breadcrumb-item + .breadcrumb-item::before {
+            content: ">";
+            color: #6c757d;
+        }
+        
+        .stats-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container py-4">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb breadcrumb-custom">
+                <li class="breadcrumb-item">
+                    <a href="{% url 'user_dashboard_management' %}" class="text-decoration-none">
+                        <i class="fas fa-users-cog me-1"></i>User Management
+                    </a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">Edit Permissions</li>
+            </ol>
+        </nav>
+
+        <!-- Messages -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>{{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="permission-card">
+                    <!-- User Header -->
+                    <div class="user-header">
+                        <div class="user-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <h3 class="mb-2">{{ user.email }}</h3>
+                        <p class="mb-0">
+                            <i class="fas fa-user-tag me-1"></i>{{ user.get_role_display }}
+                            <span class="stats-badge">
+                                <i class="fas fa-calendar-alt me-1"></i>Joined {{ user.date_joined|date:"M Y" }}
+                            </span>
+                        </p>
+                    </div>
+
+                    <!-- Form Content -->
+                    <div class="p-4">
+                        <h4 class="mb-4">
+                            <i class="fas fa-sliders-h me-2"></i>Dashboard Access Permissions
+                        </h4>
+
+                        <form method="post" id="permissionForm">
+                            {% csrf_token %}
+                            
+                            <div class="row">
+                                <!-- Cyber Cell -->
+                                <div class="col-md-6 mb-3">
+                                    <div class="dashboard-option" data-field="cyber_cell_access">
+                                        <div class="text-center">
+                                            <i class="fas fa-shield-alt dashboard-icon cyber-cell"></i>
+                                            <h6 class="fw-bold">Cyber Cell Dashboard</h6>
+                                            <p class="text-muted small mb-3">Security and fraud monitoring system</p>
+                                            <div class="form-check form-switch d-flex justify-content-center">
+                                                {{ form.cyber_cell_access }}
+                                                <label class="form-check-label ms-2" for="{{ form.cyber_cell_access.id_for_label }}">
+                                                    Enable Access
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Bank Balance -->
+                                <div class="col-md-6 mb-3">
+                                    <div class="dashboard-option" data-field="bank_balance_access">
+                                        <div class="text-center">
+                                            <i class="fas fa-university dashboard-icon bank-balance"></i>
+                                            <h6 class="fw-bold">Bank Balance Dashboard</h6>
+                                            <p class="text-muted small mb-3">Real-time bank balance updates</p>
+                                            <div class="form-check form-switch d-flex justify-content-center">
+                                                {{ form.bank_balance_access }}
+                                                <label class="form-check-label ms-2" for="{{ form.bank_balance_access.id_for_label }}">
+                                                    Enable Access
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Payment Gateway -->
+                                <div class="col-md-6 mb-3">
+                                    <div class="dashboard-option" data-field="payment_gateway_access">
+                                        <div class="text-center">
+                                            <i class="fas fa-credit-card dashboard-icon payment-gateway"></i>
+                                            <h6 class="fw-bold">Payment Gateway Dashboard</h6>
+                                            <p class="text-muted small mb-3">Payment processing and transactions</p>
+                                            <div class="form-check form-switch d-flex justify-content-center">
+                                                {{ form.payment_gateway_access }}
+                                                <label class="form-check-label ms-2" for="{{ form.payment_gateway_access.id_for_label }}">
+                                                    Enable Access
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Cams Carvy -->
+                                <div class="col-md-6 mb-3">
+                                    <div class="dashboard-option" data-field="cams_carvy_access">
+                                        <div class="text-center">
+                                            <i class="fas fa-camera dashboard-icon cams-carvy"></i>
+                                            <h6 class="fw-bold">Cams Carvy Dashboard</h6>
+                                            <p class="text-muted small mb-3">Camera and monitoring systems</p>
+                                            <div class="form-check form-switch d-flex justify-content-center">
+                                                {{ form.cams_carvy_access }}
+                                                <label class="form-check-label ms-2" for="{{ form.cams_carvy_access.id_for_label }}">
+                                                    Enable Access
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Consolidated -->
+                                <div class="col-12 mb-3">
+                                    <div class="dashboard-option" data-field="consolidated_access">
+                                        <div class="text-center">
+                                            <i class="fas fa-chart-bar dashboard-icon consolidated"></i>
+                                            <h6 class="fw-bold">Consolidated Dashboard</h6>
+                                            <p class="text-muted small mb-3">Combined view of all system data and analytics</p>
+                                            <div class="form-check form-switch d-flex justify-content-center">
+                                                {{ form.consolidated_access }}
+                                                <label class="form-check-label ms-2" for="{{ form.consolidated_access.id_for_label }}">
+                                                    Enable Access
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="text-center pt-4 border-top">
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'user_dashboard_management' %}" class="btn btn-outline-secondary btn-lg me-3">
+                                        <i class="fas fa-arrow-left me-2"></i>Back to Users
+                                    </a>
+                                    <button type="button" class="btn btn-outline-warning btn-lg me-3" id="selectAllBtn">
+                                        <i class="fas fa-check-double me-2"></i>Select All
+                                    </button>
+                                    <button type="button" class="btn btn-outline-danger btn-lg me-3" id="clearAllBtn">
+                                        <i class="fas fa-times me-2"></i>Clear All
+                                    </button>
+                                    <button type="submit" class="btn btn-custom btn-lg">
+                                        <i class="fas fa-save me-2"></i>Save Permissions
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Update dashboard option styling based on checkbox state
+            function updateDashboardOption(checkbox) {
+                const option = checkbox.closest('.dashboard-option');
+                if (checkbox.checked) {
+                    option.classList.add('selected');
+                } else {
+                    option.classList.remove('selected');
+                }
+            }
+
+            // Initialize dashboard option styling
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                updateDashboardOption(checkbox);
+                
+                checkbox.addEventListener('change', function() {
+                    updateDashboardOption(this);
+                });
+            });
+
+            // Make dashboard options clickable
+            const dashboardOptions = document.querySelectorAll('.dashboard-option');
+            dashboardOptions.forEach(option => {
+                option.addEventListener('click', function(e) {
+                    if (e.target.type !== 'checkbox' && e.target.tagName !== 'LABEL') {
+                        const checkbox = this.querySelector('input[type="checkbox"]');
+                        checkbox.checked = !checkbox.checked;
+                        checkbox.dispatchEvent(new Event('change'));
+                    }
+                });
+            });
+
+            // Select All functionality
+            document.getElementById('selectAllBtn').addEventListener('click', function() {
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = true;
+                    updateDashboardOption(checkbox);
+                });
+            });
+
+            // Clear All functionality
+            document.getElementById('clearAllBtn').addEventListener('click', function() {
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = false;
+                    updateDashboardOption(checkbox);
+                });
+            });
+
+            // Form submission with loading state
+            document.getElementById('permissionForm').addEventListener('submit', function() {
+                const submitBtn = this.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+                submitBtn.disabled = true;
+                
+                // Re-enable button after 3 seconds in case of any issues
+                setTimeout(function() {
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                }, 3000);
+            });
+        });
+    </script>
+</body>
+</html>

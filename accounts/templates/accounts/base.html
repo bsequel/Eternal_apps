@@ -1,0 +1,370 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+
+
+    <title>
+        {% block title %}{% endblock %}
+    </title>
+    <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"> -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+    <!-- In <head> -->
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+
+    <!-- Bootstrap Bundle JS (includes Popper) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js">
+    </script>
+    <!-- Bootstrap Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+    </script>
+
+    <!-- index -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Be Vietnam Pro from Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Add Animate.css for animations -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+
+    <link rel="stylesheet" type="text/css" href="{% static 'css/index.css' %}">
+
+    <link rel="stylesheet" type="text/css" href="{% static 'css/profile.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/logo.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/home.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/footer.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/cams_style.css' %}">
+
+
+    <!-- <style>
+        .permission-table {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .dashboard-checkbox {
+            transform: scale(1.2);
+            margin: 0;
+        }
+
+        .user-row {
+            transition: background-color 0.2s;
+        }
+
+        .user-row:hover {
+            background-color: #f8f9fa;
+        }
+
+        .email-column {
+            font-weight: 500;
+            color: #2c3e50;
+        }
+
+        .dashboard-header {
+            /* background: linear-gradient(135deg, #667eea 0%, #7293F3 100%); */
+            color: #7293F3;
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px 10px 0 0;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-left: 5px;
+        }
+
+        .status-active {
+            background-color: #28a745;
+        }
+
+        .status-inactive {
+            background-color: #dc3545;
+        }
+
+        .bulk-actions {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+    </style> -->
+    <style>
+        /* Apply to entire page and all elements */
+        body,
+        body * {
+            font-family: 'Be Vietnam Pro', sans-serif !important;
+            /* font-size: 14px !important; */
+            font-weight: 400 !important;
+
+        }
+
+      
+
+        
+
+        /* Force full width filter inputs */
+        table.dataTable thead input {
+            font-size: 14px;
+            padding: 6px 8px;
+            margin: 0;
+            /* remove margin to avoid gaps */
+            width: 50px !important;
+            /* force full width */
+            min-width: 100% !important;
+            /* ensures stretching */
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            /* respect padding inside */
+            border: none;
+            border-bottom: 1px solid #dcdcdc;
+            border-radius: 0;
+            outline: none;
+            background-color: transparent;
+            color: #212529;
+            height: 34px;
+            transition: border-color 0.2s ease-in-out, background-color 0.2s;
+        }
+
+        /* Focus underline highlight */
+        table.dataTable thead input:focus {
+            border-bottom: 2px solid #0d6efd;
+            background-color: #f9fbff;
+            box-shadow: none;
+        }
+
+        /* Placeholder styling */
+        table.dataTable thead input::placeholder {
+            color: #9ca3af;
+            font-size: 13px;
+            font-style: italic;
+        }
+
+
+
+
+        /* Force light blue header background */
+        table.dataTable thead {
+            /* background-color: #e8f1fb !important; */
+            color: #2b5da7 !important;
+            font-weight: 500 !important;
+        }
+
+        table.dataTable thead th {
+            color: #4175c2 !important;
+            font-weight: 600 !important;
+            text-align: center;
+            vertical-align: middle;
+            padding: 10px 12px;
+            border-bottom: 2px solid #d0e0f5;
+        }
+    </style>
+
+</head>
+
+<body data-username="{{ user.username|default:'User' }}" data-role="{{ user.role|default:'viewer' }}"
+    data-email="{{ user.email|default:'dummy@gmail.com'  }}">
+
+    <nav class="navbar navbar-expand-lg fixed-top " style="z-index: 1000 !important;">
+        <div class="container">
+            <!-- <a class="navbar-brand" href="/" style="color: #ffffff;">
+                <img src="{% static  'images/logo.avif' %}" alt="Eternal Logo" srcset="" style="height: 45px;width: 45px;padding: 2px;">Eternal
+            </a> -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+
+                <!-- <img src="{% static  'images/logo.avif' %}" alt="Logo" class="logo-3d"> -->
+                <!-- <img src="{% static  'images/eternal-horizontal-white bg.png' %}" alt="Logo" class="" style="width: 100px;height: 50px;"> -->
+                <img src="{% static  'images/eternal-horizontal-white bg.png' %}" alt="logo-3d" class=""
+                    style="width: 140px;height: auto; padding: 0px;margin: 0px;">
+
+                <ul class="navbar-nav ms-auto">
+                    {% block nav %}
+
+                    {% block home %}<li class="nav-item"><a class="nav-link" href="/" style="color: #ffffff;">Home</a>
+                    </li>{% endblock %}
+
+                    {% if user.is_authenticated %}
+
+                    {% block dashboard %} <li class="nav-item"><a class="nav-link" href="{% url 'dashboard_cards' %}"
+                            style="color: #ffffff;">Dashboard</a></li> {% endblock %}
+
+                    <div class="profile" id="profileWrapper">
+                        <button class="profile-btn" id="profileToggle">JD</button>
+                        <div class="dropdown" id="profileDropdown">
+                            <div class="user-info text-center">
+                                <p>
+                                    <span>👤</span>
+                                    <strong id="username">John Doe</strong>
+                                    <span class="badge bg-warning text-dark mb-1 px-3 py-1 rounded-pill"
+                                        id="user-role">viewer</span>
+                                </p>
+                                <p style="font-size: 13px; color: rgb(0, 154, 159);">
+                                    <span>
+                                        <i class="bi bi-envelope"></i>
+                                    </span>
+                                    <span id="user-email" class=" mb-1 px-1 py-1">john.doe@example.com</span>
+                                </p>
+                            </div>
+                            <a class="bw-btn" href="{% url 'logout' %}"><i
+                                    class="bi bi-box-arrow-right pe-3"></i>Logout</a>
+                        </div>
+                    </div>
+                    {% else %}
+                    <!-- <li class="nav-item"><a class="nav-link" href="{% url 'dashboard' %}" style="color: #ffffff;">Dashboard</a></li> -->
+                    {% block login %} <li class="nav-item">
+                        <a class="nav-link" href="{% url 'login' %}" style="color: #ffffff;">Login</a>
+                    </li> {% endblock %}
+
+                    {% block register %} <li class="nav-item">
+                        <a class="nav-link" href="{% url 'register' %}" style="color: #ffffff;">Register</a>
+                    </li> {% endblock %}
+
+
+                    {% endif %}
+                    {% endblock %}
+
+
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="fluid-container">
+        {% block content %}{% endblock %}
+    </div>
+
+
+
+
+
+
+    {% block footer %}
+    <footer class="bg-white text-dark mt-5 pt-5 pb-3 border-top">
+        <div class="container">
+            <div class="row">
+                <!-- Company Info -->
+                <div class="col-md-4 mb-4">
+                    <h5 class="fw-bold text-uppercase">Eternal Limited</h5>
+                    <p class="small text-muted">
+                        Building a future of trust and innovation in finance.
+                    </p>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-md-4 mb-4">
+                    <!-- <h6 class="fw-semibold text-uppercase">Quick Links</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="footer-link">Home</a></li>
+                        <li><a href="#" class="footer-link">About</a></li>
+                        <li><a href="#" class="footer-link">Services</a></li>
+                        <li><a href="#" class="footer-link">Contact</a></li>
+                    </ul> -->
+                </div>
+
+                <!-- Contact -->
+                <!-- <div class="col-md-4 mb-4">
+                    <h6 class="fw-semibold text-uppercase">Contact</h6>
+                    <p class="small mb-1">📍 123 Finance Street, NY</p>
+                    <p class="small mb-1">📞 +1 (234) 567-890</p>
+                    <p class="small">✉️ info@eternal.com</p>
+                    <p>powerd by <span class="text-primary">sequelstring.ai</span></p>
+                </div> -->
+                <!-- Developed By Info -->
+                <div class="col-md-4 mb-4 text-md-end text-center">
+                    <!-- <h6 class="fw-bold mb-0">
+                        Powered By
+                        <span class="brand-highlight">sequelstring.<span class="ai-text">AI</span></span>
+                    </h6> -->
+                    <img src="{% static 'images/logo.webp' %}" alt="" height="60px" width="200px">
+                </div>
+
+            </div>
+
+            <!-- Divider -->
+            <hr class="border-dark opacity-10" />
+
+            <!-- Bottom -->
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <p class="mb-0 small text-muted"></p>
+                <p class="mb-0 small text-muted"></p>
+                <!-- <div>
+                    <a href="#" class="footer-social me-3"><i class="bi bi-facebook"></i></a>
+                    <a href="#" class="footer-social me-3"><i class="bi bi-twitter"></i></a>
+                    <a href="#" class="footer-social"><i class="bi bi-linkedin"></i></a>
+                </div> -->
+            </div>
+            <div class="d-flex justify-content-end align-items-center flex-wrap gap-3">
+                <p class="mb-0 small text-muted">SequelString AI 2025 © All Rights Reserved.</p>
+
+            </div>
+            <div class="d-flex justify-content-end align-items-center flex-wrap gap-3">
+                <p class="mb-0 small text-muted">Built with ❤️ in SequelString AI.</p>
+
+            </div>
+
+        </div>
+    </footer>
+    {% endblock %}
+
+
+    <!-- register mmodal -->
+
+    <!-- Button trigger modal -->
+    <!-- <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#registerModal">
+  Register
+</button> -->
+
+
+
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js">
+    </script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js">
+    </script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js">
+    </script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js">
+    </script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.colVis.min.js">
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js">
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <script src="{% static 'js/script.js' %}"></script>
+    <script src="{% static 'js/indexScript.js' %}"></script>
+    <script src="{% static 'js/profile.js' %}"></script>
+    <script src="{% static 'js/home.js' %}"></script>
+    <script src="{% static 'js/cams_script.js' %}"></script>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+
+
+</body>
+
+</html>

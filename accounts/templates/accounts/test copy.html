@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Profile Dropdown (Click + Hover)</title>
+  <style>
+    .profile {
+      position: relative;
+      display: inline-block;
+    }
+
+    .profile-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #4285f4;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 16px;
+    }
+
+    .dropdown {
+      position: absolute;
+      top: 50px;
+      right: 0;
+      width: 260px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      padding: 16px;
+      display: none;
+      z-index: 100;
+    }
+
+    .dropdown.active {
+      display: block;
+      animation: fadeIn 0.2s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .user-info {
+      text-align: center;
+      margin-bottom: 12px;
+    }
+
+    .logout-btn {
+      width: 100%;
+      padding: 8px;
+      background: #f1f3f4;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .logout-btn:hover {
+      background: #e5e7eb;
+    }
+  </style>
+</head>
+<body style="display: flex; align-items: center;">
+  <div class="profile" id="profileWrapper">
+    <button class="profile-btn" id="profileToggle">JD</button>
+    <div class="dropdown" id="profileDropdown">
+      <div class="user-info">
+        <p><strong>John Doe</strong></p>
+        <p style="font-size: 13px; color: gray;">john.doe@example.com</p>
+      </div>
+      <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+    </div>
+  </div>
+
+  <script>
+    const toggleBtn = document.getElementById("profileToggle");
+    const dropdown = document.getElementById("profileDropdown");
+    const profileWrapper = document.getElementById("profileWrapper");
+
+    let isClickedOpen = false; // track click state
+
+    // Hover behavior (only works if not clicked open)
+    profileWrapper.addEventListener("mouseenter", () => {
+      if (!isClickedOpen) dropdown.classList.add("active");
+    });
+
+    profileWrapper.addEventListener("mouseleave", () => {
+      if (!isClickedOpen) dropdown.classList.remove("active");
+    });
+
+    // Click to toggle dropdown (like Google)
+    toggleBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      isClickedOpen = !isClickedOpen;
+      dropdown.classList.toggle("active", isClickedOpen);
+    });
+
+    // Close when clicking outside
+    document.addEventListener("click", (e) => {
+      if (!profileWrapper.contains(e.target)) {
+        isClickedOpen = false;
+        dropdown.classList.remove("active");
+      }
+    });
+
+    function logout() {
+      alert("Logging out...");
+    }
+  </script>
+</body>
+</html>

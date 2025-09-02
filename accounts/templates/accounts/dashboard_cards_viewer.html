@@ -1,0 +1,103 @@
+
+{% extends 'accounts/base.html' %}
+{% load static %}
+
+{% block title %}Dashboard{% endblock %}
+{% block dashboard %}{% endblock %}
+{% block content %}
+
+
+
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h3 class="dashboard-title"><span class="color:red;">Viewer</span>Dashboard</h3>
+        <p class="dashboard-subtitle">Manage your services efficiently</p>
+    </div>
+
+    <div class="cards-grid">
+        {% if request.user.cyber_cell_access or request.user.bank_balance_access or request.user.payment_gateway_access or request.user.cams_carvy_access or request.user.consolidated_access %}
+
+        {% if request.user.cyber_cell_access %}
+        <a href="{% url 'dashboard' %}?section=cyber-cell"
+            class="card-link animate__animated animate__fadeInUp animate__delay-.9s">
+            <div class="dashboard-card" style="background-color: #E6E9EF;">
+                <div class="card-icon cyber">
+                    <i class="bi bi-shield-lock"></i>
+                </div>
+                <h3>Cyber Cell</h3>
+                <p>Security & Reports</p>
+            </div>
+        </a>
+        {% endif %}
+
+        {% if request.user.bank_balance_access %}
+        <a href="{% url 'dashboard' %}?section=bank-balance"
+            class="card-link animate__animated animate__fadeInUp animate__delay-.8s">
+            <div class="dashboard-card" style="background-color: #E6E9EF;">
+                <div class="card-icon bank">
+                    <i class="bi bi-bank"></i>
+                </div>
+                <h3>Bank Balance</h3>
+                <p>Account Updates</p>
+            </div>
+        </a>
+        {% endif %}
+
+        {% if request.user.payment_gateway_access %}
+        <a href="{% url 'dashboard' %}?section=payment-gateways"
+            class="card-link animate__animated animate__fadeInUp animate__delay-.7s">
+            <div class="dashboard-card" style="background-color: #E6E9EF;">
+                <div class="card-icon payment">
+                    <i class="bi bi-credit-card-2-front"></i>
+                </div>
+                <h3>Payment Gateway</h3>
+                <p>Transaction Management</p>
+            </div>
+        </a>
+        {% endif %}
+
+        {% if request.user.cams_carvy_access %}
+        <a href="{% url 'dashboard' %}?section=cams-carvy"
+            class="card-link animate__animated animate__fadeInUp animate__delay-.6s">
+            <div class="dashboard-card" style="background-color: #E6E9EF;">
+                <div class="card-icon cams">
+                    <i class="bi bi-diagram-3"></i>
+                </div>
+                <h3>Cams Karvy</h3>
+                <p>Analytics & Reports</p>
+            </div>
+        </a>
+        {% endif %}
+
+        {% if request.user.consolidated_access %}
+        <a href="{% url 'dashboard' %}?section=consolidated"
+            class="card-link animate__animated animate__fadeInUp animate__delay-.5s">
+            <div class="dashboard-card" style="background-color: #E6E9EF;">
+                <div class="card-icon consolidated">
+                    <i class="bi bi-bank2"></i>
+                </div>
+                <h3>Consolidated</h3>
+                <p>Unified Balance View</p>
+            </div>
+        </a>
+        {% endif %}
+
+        {% else %}
+        <!-- Show message card if no dashboards are assigned -->
+        <a href="#" class="card-link animate__animated animate__fadeInUp animate__delay-.5s">
+            <div class="dashboard-card" style="background-color: #f8d7da; color:#721c24;">
+                <div class="card-icon">
+                    <i class="bi bi-exclamation-triangle"></i>
+                </div>
+                <h3>No Dashboard Assigned</h3>
+                <p>Please contact your administrator</p>
+            </div>
+        </a>
+        {% endif %}
+    </div>
+
+</div>
+
+
+
+{% endblock %}
