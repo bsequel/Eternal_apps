@@ -11,7 +11,6 @@ from django.db.models import Sum, Count, Q
 from django.shortcuts import get_object_or_404
 import csv
 from django.views import View
-from .services import process_cams_files,import_cams_portfolio_with_pandas,process_cams_emails
 from django.views.decorators.http import require_GET,require_POST
 from datetime import datetime
 import openpyxl
@@ -33,6 +32,10 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.db.models import Q, Count
 from decimal import Decimal, InvalidOperation
+
+from . services import check_unread_mails,main
+
+
 
 @login_required
 def cams_carvy_dashboard(request):
@@ -598,9 +601,9 @@ def update_isin(request):
             if not new_isin:
                 return JsonResponse({'success': False, 'error': 'ISIN cannot be empty'})
             
-            # UPDATED: Changed validation from 12 chars to 8-20 chars
-            if len(new_isin) < 8 or len(new_isin) > 20:
-                return JsonResponse({'success': False, 'error': 'ISIN must be 8 to 20 characters long'})
+            # UPDATED: Changed validation 18 chars
+            # if len(new_isin) <= 18:
+            #     return JsonResponse({'success': False, 'error': 'ISIN 18 characters long'})
             
             portfolio = get_object_or_404(CamsPortfolio, id=portfolio_id)
             portfolio.isin = new_isin
@@ -615,8 +618,71 @@ def update_isin(request):
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 
+# ===================    isin mapping ======================
+import pandas as pd
+from django.shortcuts import render
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from .models import Scheme, CamsPortfolio
+from .forms import UploadFileForm
+
+# AJAX Upload Mapping File
+@csrf_exempt
+@csrf_exempt
+def ajax_upload_mapping(request):
+    if request.method == 'POST' and request.FILES.get('file'):
+        file = request.FILES['file']
+        try:
+            if file.name.endswith('.csv'):
+                df = pd.read_csv(file)
+            elif file.name.endswith(('.xls', '.xlsx')):
+                df = pd.read_excel(file)
+            else:
+                return JsonResponse({'status': 'error', 'message': 'Invalid file format'})
+
+            if 'ISIN' not in df.columns or 'Scheme Name' not in df.columns:
+                return JsonResponse({'status': 'error', 'message': 'Columns must include ISIN and Scheme Name'})
+
+            inserted = 0
+            skipped = 0
+
+            for _, row in df.iterrows():
+                # Check if this pair already exists
+                exists = Scheme.objects.filter(isin=row['ISIN'], scheme_name=row['Scheme Name']).exists()
+                if exists:
+                    skipped += 1
+                else:
+                    Scheme.objects.create(isin=row['ISIN'], scheme_name=row['Scheme Name'])
+                    inserted += 1
+
+            return JsonResponse({
+                'status': 'success',
+                'message': f'{inserted} records inserted, {skipped} duplicates skipped.'
+            })
+
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+
+    return JsonResponse({'status': 'error', 'message': 'No file uploaded'})
+
+# AJAX Map ISINs to Portfolio
+@csrf_exempt
+def ajax_map_isin(request):
+    if request.method == 'POST':
+        scheme_dict = dict(Scheme.objects.values_list('scheme_name', 'isin'))
+        updated_count = 0
+        portfolios = CamsPortfolio.objects.filter(isin__isnull=True)
+        for portfolio in portfolios:
+            isin = scheme_dict.get(portfolio.scheme_name)
+            if isin:
+                portfolio.isin = isin
+                portfolio.save()
+                updated_count += 1
+        return JsonResponse({'status': 'success', 'updated_count': updated_count})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'})
 
 
+# ===================    isin mapping ======================
 
 class DownloadSummaryView(View):
     def get(self, request):
@@ -869,26 +935,50 @@ def delete_current_month_data():
 
 
 
+# @csrf_exempt  # remove this in production and use proper CSRF tokens
+# @require_POST
+# @login_required
+# def parse_cams_view(request):
+        
+
+#     # try:
+#         print(process_cams_emails())
+
+#         delete_current_month_data()
+        
+#         import_cams_portfolio_with_pandas()
+
+#         result = process_cams_files("pdf_extracted_data")
+#         # return JsonResponse(result, safe=False)
+#         message = "Import ran successfully"
+#         return JsonResponse({"status": "success", "message": message})
+   
+#     # except Exception as e:
+#     #     return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
+
+
+
 @csrf_exempt  # remove this in production and use proper CSRF tokens
 @require_POST
 @login_required
 def parse_cams_view(request):
+
         
-
-    # try:
-        print(process_cams_emails())
-
-        delete_current_month_data()
+    count = check_unread_mails()
+    if count == 0:
+        # print("📭 No unread mails")
+        message  = "No unread mails"
+    else:
         
-        import_cams_portfolio_with_pandas()
-
-        result = process_cams_files("pdf_extracted_data")
-        # return JsonResponse(result, safe=False)
-        message = "Import ran successfully"
-        return JsonResponse({"status": "success", "message": message})
+        print(f"📧 You have {count} unread mails")
+        main()    
+        message = "Run Successfull.."
+        
+       
+    return JsonResponse({"status": "success", "message": message})
    
-    # except Exception as e:
-    #     return JsonResponse({"status": "error", "message": str(e)}, status=500)
     
 
 

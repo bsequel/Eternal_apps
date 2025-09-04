@@ -3,17 +3,10 @@ let isStatsLoading = false;
 let searchTimeouts = {};
 
 $(document).ready(function () {
-    // initDataTable();
+    initDataTable();
     initFilters();
     loadStats();
     initSimpleConfirm();
-    const role = body.dataset.role;
-
-    if (role === 'viewer') {
-        initDataTable_viewer();
-    } else {
-        initDataTable();
-    }
 
 });
 
@@ -247,6 +240,94 @@ function forceUpdateStats() {
 // }
 
 // FIXED: Completely new column search approach using event delegation
+function initDataTable() {
+    table = $('#portfolio-table1').DataTable({
+        scrollY: "500px",
+        scrollCollapse: true,
+        paging: true,
+        ordering: true,
+        searching: true,
+        autoWidth: false,
+        fixedHeader: true,
+        scrollX: true,
+        autoWidth: false,
+        responsive: false,
+        deferRender: true,
+
+        processing: true,
+        serverSide: true,
+        ajax: {
+            url: '/camsapp/api/portfolio-data/',
+            type: 'GET',
+            data: function (d) {
+                Object.assign(d, getAllFilterData());
+                return d;
+            },
+            error: function (xhr, error) {
+                console.error('Table AJAX Error:', error);
+                showToast('Error loading table data', 'error');
+            }
+        },
+        columns: [
+            { data: 0, orderable: false },
+            { data: 1, orderable: true },
+            { data: 2, orderable: true },
+            { data: 3, orderable: true },
+            { data: 4, orderable: true },
+            { data: 5, orderable: true },
+            { data: 6, orderable: true },
+            { data: 7, orderable: true },
+            { data: 8, orderable: true },
+            { data: 9, orderable: true },
+            { data: 10, orderable: true }
+        ],
+        pageLength: 10,
+        lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+        order: [[9, 'desc']],
+
+        // 👇 Only one page number between prev and next
+        pagingType: "simple_numbers",
+
+        language: {
+            processing: `
+                <div class="d-flex justify-content-center align-items-center py-3">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <span class="ms-2">Loading data...</span>
+                </div>`
+        },
+
+        columnDefs: [
+            {
+                targets: "_all",
+                createdCell: function (td) {
+                    $(td).css({
+                        "font-weight": "400",
+                        "font-size": "14px",
+                        "font-family": "'Be Vietnam Pro', sans-serif",
+                        "padding": "10px",
+                        "border": "none" 
+
+                    });
+                }
+            },
+        ],
+
+        drawCallback: function (settings) {
+            $('#total-records').text((settings._iRecordsTotal || 0).toLocaleString());
+            initISINEdit();
+            console.log('Table drawn, updating stats...');
+            setTimeout(forceUpdateStats, 200);
+        },
+
+        initComplete: function () {
+            console.log('DataTable initialization complete');
+            initColumnSearch();
+        }
+    });
+}
+
 // function initDataTable() {
 //     table = $('#portfolio-table').DataTable({
 //         scrollY: "500px",
@@ -271,24 +352,24 @@ function forceUpdateStats() {
 //                 showToast('Error loading table data', 'error');
 //             }
 //         },
+
 //         columns: [
-//             { data: 0, orderable: false },
+//             { data: 0, orderable: false },   // Sr No
 //             { data: 1, orderable: true },
 //             { data: 2, orderable: true },
-//             { data: 3, orderable: true },
-//             { data: 4, orderable: true },
-//             { data: 5, orderable: true },
-//             { data: 6, orderable: true },
-//             { data: 7, orderable: true },
-//             { data: 8, orderable: true },
-//             { data: 9, orderable: true },
-//             { data: 10, orderable: true }
+//             { data: 3, orderable: true },    // Date column → render later in columnDefs
+//             { data: 4, orderable: true },    // Amount column
+//             { data: 5, orderable: true },    // Amount column
+//             { data: 6, orderable: true },    // Amount column
+//             { data: 7, orderable: true },    // Amount column
+//             { data: 8, orderable: true },    // Amount column
+//             { data: 9, orderable: true },    // Amount column
+//             { data: 10, orderable: true }    // Amount column
 //         ],
+
 //         pageLength: 10,
 //         lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
-//         order: [[9, 'desc']],
-
-//         // 👇 Only one page number between prev and next
+//         order: [[9, 'desc']],  // sort by column 9
 //         pagingType: "simple_numbers",
 
 //         language: {
@@ -302,6 +383,7 @@ function forceUpdateStats() {
 //         },
 
 //         columnDefs: [
+//             // Apply styles to all cells
 //             {
 //                 targets: "_all",
 //                 createdCell: function (td) {
@@ -313,6 +395,26 @@ function forceUpdateStats() {
 //                     });
 //                 }
 //             },
+
+//             // Format date column (index 3)
+//             {
+//                 targets: 3,
+//                 render: function (data) {
+//                     if (!data) return "";
+//                     const d = new Date(data);
+//                     return d.toLocaleDateString("en-GB"); // dd-mm-yyyy
+//                 }
+//             },
+
+//             // Format amount columns (indexes 4 → 10)
+//             {
+//                 targets: [5, 6, 8, 9],
+//                 render: function (data) {
+//                     if (data === null || data === undefined || data === "") return "0.00";
+//                     return parseFloat(data)
+//                         .toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+//                 }
+//             }
 //         ],
 
 //         drawCallback: function (settings) {
@@ -328,174 +430,6 @@ function forceUpdateStats() {
 //         }
 //     });
 // }
-
-function initDataTable() {
-    table = $('#portfolio-table').DataTable({
-        scrollY: "500px",
-        scrollX: true, // 👈 Add this
-        scrollCollapse: true,
-        paging: true,
-        ordering: true,
-        searching: true,
-        autoWidth: false,
-
-        // fixedHeader: true, ❌ REMOVE THIS to allow horizontal scrolling of header
-
-        processing: true,
-        serverSide: true,
-        ajax: {
-            url: '/camsapp/api/portfolio-data/',
-            type: 'GET',
-            data: function (d) {
-                Object.assign(d, getAllFilterData());
-                return d;
-            },
-            error: function (xhr, error) {
-                console.error('Table AJAX Error:', error);
-                showToast('Error loading table data', 'error');
-            }
-        },
-        columns: [
-            { data: 0, orderable: false },
-            { data: 1, orderable: true },
-            { data: 2, orderable: true },
-            { data: 3, orderable: true },
-            { data: 4, orderable: true },
-            { data: 5, orderable: true },
-            { data: 6, orderable: true },
-            { data: 7, orderable: true },
-            { data: 8, orderable: true },
-            { data: 9, orderable: true },
-            { data: 10, orderable: true }
-        ],
-        pageLength: 10,
-        lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
-        order: [[9, 'desc']],
-        pagingType: "simple_numbers",
-
-        language: {
-            processing: `
-                <div class="d-flex justify-content-center align-items-center py-3">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                    <span class="ms-2">Loading data...</span>
-                </div>`
-        },
-
-        columnDefs: [
-            {
-                targets: "_all",
-                createdCell: function (td) {
-                    $(td).css({
-                        "font-weight": "400",
-                        "font-size": "14px",
-                        "font-family": "'Be Vietnam Pro', sans-serif",
-                        "padding": "10px"
-                    });
-                }
-            },
-        ],
-
-        drawCallback: function (settings) {
-            $('#total-records').text((settings._iRecordsTotal || 0).toLocaleString());
-            initISINEdit();
-            console.log('Table drawn, updating stats...');
-            setTimeout(forceUpdateStats, 200);
-        },
-
-        initComplete: function () {
-            console.log('DataTable initialization complete');
-            initColumnSearch();
-        }
-    });
-}
-
-
-function initDataTable_viewer() {
-    table = $('#portfolio-table1').DataTable({
-        scrollY: "500px",
-        scrollX: true, // 👈 Add this
-        scrollCollapse: true,
-        paging: true,
-        ordering: true,
-        searching: true,
-        autoWidth: false,
-
-        // fixedHeader: true, ❌ REMOVE THIS to allow horizontal scrolling of header
-
-        processing: true,
-        serverSide: true,
-        ajax: {
-            url: '/camsapp/api/portfolio-data/',
-            type: 'GET',
-            data: function (d) {
-                Object.assign(d, getAllFilterData());
-                return d;
-            },
-            error: function (xhr, error) {
-                console.error('Table AJAX Error:', error);
-                showToast('Error loading table data', 'error');
-            }
-        },
-        columns: [
-            { data: 0, orderable: false },
-            { data: 1, orderable: true },
-            { data: 2, orderable: true },
-            { data: 3, orderable: true },
-            { data: 4, orderable: true },
-            { data: 5, orderable: true },
-            { data: 6, orderable: true },
-            { data: 7, orderable: true },
-            { data: 8, orderable: true },
-            { data: 9, orderable: true },
-            { data: 10, orderable: true }
-        ],
-        pageLength: 10,
-        lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
-        order: [[9, 'desc']],
-        pagingType: "simple_numbers",
-
-        language: {
-            processing: `
-                <div class="d-flex justify-content-center align-items-center py-3">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                    <span class="ms-2">Loading data...</span>
-                </div>`
-        },
-
-        columnDefs: [
-            {
-                targets: "_all",
-                createdCell: function (td) {
-                    $(td).css({
-                        "font-weight": "400",
-                        "font-size": "14px",
-                        "font-family": "'Be Vietnam Pro', sans-serif",
-                        "padding": "10px"
-                    });
-                }
-            },
-        ],
-
-        drawCallback: function (settings) {
-            $('#total-records').text((settings._iRecordsTotal || 0).toLocaleString());
-            initISINEdit();
-            console.log('Table drawn, updating stats...');
-            setTimeout(forceUpdateStats, 200);
-        },
-
-        initComplete: function () {
-            console.log('DataTable initialization complete');
-            initColumnSearch();
-        }
-    });
-}
-
-
-
 
 
 
@@ -535,7 +469,7 @@ function initColumnSearch() {
 
 function initFilters() {
     // Apply filters button
-    $('#apply-filters1').click(function () {
+    $('#apply-filter').click(function () {
         console.log('Apply filters clicked');
         if (table) {
             table.ajax.reload(function () {
@@ -547,7 +481,7 @@ function initFilters() {
     });
 
     // Reset filters button
-    $('#reset-filters1').click(function () {
+    $('#reset-filter').click(function () {
         console.log('Reset filters clicked');
         $('#entity-filter, #isin-filter, #scheme-filter').val('');
         $('#month-filter').val('');
@@ -639,42 +573,198 @@ function loadStats() {
 //     });
 // }
 
+// function initISINEdit() {
+//     $('.editable-isin').off('click').on('click', function () {
+//         const $this = $(this);
+//         if ($this.find('input').length) return; // Prevent multiple inputs
+//         const currentValue = $this.data('value');
+//         const id = $this.data('id');
+//         const originalHtml = $this.html();
+
+//         const $input = $('<input>', {
+//             type: 'text',
+//             value: currentValue,
+//             class: 'form-control form-control-sm editing',
+//             maxlength: 20,
+//             title: 'ISIN must be 8 to 20 characters only'
+//         });
+
+//         $this.html('').append($input);
+//         $input.focus().select();
+
+//         $input.on('blur keypress', function (e) {
+//             if (e.type === 'keypress' && e.which !== 13) return;
+//             const newValue = $(this).val().trim().toUpperCase();
+
+//             if (newValue === currentValue) {
+//                 $this.html(originalHtml);
+//                 return;
+//             }
+//             if (newValue.length < 8 || newValue.length > 20) {
+//                 showToast('ISIN must be 8 to 20 characters', 'error');
+//                 $this.html(originalHtml);
+//                 return;
+//             }
+//             updateISIN(id, newValue, $this, originalHtml);
+//         });
+//     });
+// }
+// function initISINEdit() {
+//     $('.editable-isin').off('click').on('click', function () {
+//         const $this = $(this);
+//         if ($this.find('input').length) return; // Prevent multiple inputs
+
+//         const currentValue = $this.data('value') || '';
+//         const id = $this.data('id');
+//         const originalHtml = $this.html();
+
+//         // Free text input
+//         const $input = $('<input>', {
+//             type: 'text',
+//             value: currentValue,
+//             class: ' editing',
+//             title: 'Enter any value'
+//         });
+
+//         $this.html('').append($input);
+//         $input.focus().select();
+
+//         function commitChange() {
+//             const newValue = $input.val(); // ✅ accept anything
+
+//             // Restore original if nothing changed
+//             if (newValue === currentValue) {
+//                 $this.html(originalHtml);
+//                 return;
+//             }
+
+//             updateISIN(id, newValue, $this, originalHtml);
+//         }
+
+//         // Commit on blur
+//         $input.on('blur', commitChange);
+
+//         // Commit on Enter
+//         $input.on('keydown', function (e) {
+//             if (e.key === 'Enter') {
+//                 commitChange();
+//             }
+//         });
+//     });
+// }
+
+
 function initISINEdit() {
-    $('.editable-isin').off('click').on('click', function () {
-        const $this = $(this);
-        if ($this.find('input').length) return; // Prevent multiple inputs
-        const currentValue = $this.data('value');
-        const id = $this.data('id');
-        const originalHtml = $this.html();
+    // Remove any previous handlers
+    $('.editable-isin').off('click');
+
+    $('.editable-isin').on('click', function () {
+        const $cell = $(this);
+
+        // Prevent multiple inputs
+        if ($cell.find('input').length) return;
+
+        const id = $cell.data('id');
+        const currentValue = $cell.data('value') || '';
+        const originalHtml = $cell.html();
+
+        // Create free-text input
+        const $input = $('<input>', {
+            type: 'text',
+            value: currentValue,
+            class: 'form-control form-control-sm editing',
+            title: 'Enter any value',
+            autocomplete: 'off'
+        });
+
+        $cell.html($input);
+        $input.focus().select();
+
+        const commit = () => {
+            const newValue = $input.val(); // ✅ accept ANY value
+            if (newValue === currentValue) {
+                $cell.html(originalHtml);
+                return;
+            }
+            updateISIN(id, newValue, $cell, originalHtml);
+        };
+
+        // Commit on blur or Enter
+        $input.on('blur', commit);
+        $input.on('keydown', function (e) {
+            if (e.key === 'Enter') commit();
+            if (e.key === 'Escape') $cell.html(originalHtml); // cancel edit
+        });
+    });
+}
+function initISINEdit() {
+    $('.editable-isin').off('click'); // Remove previous handlers
+
+    $('.editable-isin').on('click', function () {
+        const $cell = $(this);
+        if ($cell.find('input').length) return;
+
+        const id = $cell.data('id');
+        const currentValue = $cell.data('value') || '';
+        const originalHtml = $cell.html();
 
         const $input = $('<input>', {
             type: 'text',
             value: currentValue,
             class: 'form-control form-control-sm editing',
-            maxlength: 20,
-            title: 'ISIN must be 8 to 20 characters only'
+            title: 'Enter any value',
+            autocomplete: 'off'
         });
 
-        $this.html('').append($input);
+        $cell.html($input);
         $input.focus().select();
 
-        $input.on('blur keypress', function (e) {
-            if (e.type === 'keypress' && e.which !== 13) return;
-            const newValue = $(this).val().trim().toUpperCase();
+        const commit = () => {
+            const newValue = $input.val(); // Accept any value
 
+            // Restore original if unchanged
             if (newValue === currentValue) {
-                $this.html(originalHtml);
+                $cell.html(originalHtml);
                 return;
             }
-            if (newValue.length < 8 || newValue.length > 20) {
-                showToast('ISIN must be 8 to 20 characters', 'error');
-                $this.html(originalHtml);
-                return;
-            }
-            updateISIN(id, newValue, $this, originalHtml);
+
+            // Directly update value via AJAX
+            $.ajax({
+                url: '/camsapp/api/update-isin/',
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                data: JSON.stringify({ id: id, isin: newValue }),
+                contentType: 'application/json',
+                success: function (res) {
+                    if (res.success) {
+                        $cell.html(newValue).data('value', newValue);
+                        showToast('ISIN updated successfully', 'success');
+                        if (table) table.ajax.reload(null, false);
+                    } else {
+                        showToast(res.error || 'Update failed', 'error');
+                        $cell.html(originalHtml);
+                    }
+                },
+                error: function () {
+                    showToast('Error updating ISIN', 'error');
+                    $cell.html(originalHtml);
+                }
+            });
+        };
+
+        $input.on('blur', commit);
+        $input.on('keydown', function (e) {
+            if (e.key === 'Enter') commit();
+            if (e.key === 'Escape') $cell.html(originalHtml); // Cancel edit
         });
     });
 }
+
+
+
+
+
+
 
 // function updateISIN(id, newValue, $element, originalHtml) {
 //     $.ajax({
@@ -700,7 +790,7 @@ function initISINEdit() {
 //     });
 // }
 function updateISIN(id, newValue, $element, originalHtml) {
-    simpleConfirm(`Update ISIN to "${newValue}"?`, function(confirmed) {
+    simpleConfirm(`Update ISIN to "${newValue}"?`, function (confirmed) {
         if (!confirmed) {
             // If user cancels, restore original content
             $element.html(originalHtml);
@@ -730,7 +820,7 @@ function updateISIN(id, newValue, $element, originalHtml) {
             }
         });
     });
-} 
+}
 
 function showToast(message, type) {
     const toastEl = $('#toast');

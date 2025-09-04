@@ -47,6 +47,8 @@
     <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'css/cams_style.css' %}">
 
+  
+
 
     <!-- <style>
         .permission-table {
@@ -119,23 +121,17 @@
 
         }
 
-      
 
-        
 
-        /* Force full width filter inputs */
+
+
         table.dataTable thead input {
             font-size: 14px;
             padding: 6px 8px;
             margin: 0;
-            /* remove margin to avoid gaps */
-            width: 50px !important;
-            /* force full width */
-            min-width: 100% !important;
-            /* ensures stretching */
-            max-width: 100% !important;
+            width: 100% !important;
+            /* full width inside cell */
             box-sizing: border-box !important;
-            /* respect padding inside */
             border: none;
             border-bottom: 1px solid #dcdcdc;
             border-radius: 0;
@@ -160,12 +156,9 @@
             font-style: italic;
         }
 
-
-
-
-        /* Force light blue header background */
+        /* Header styling */
         table.dataTable thead {
-            /* background-color: #e8f1fb !important; */
+            background-color: #e8f1fb !important;
             color: #2b5da7 !important;
             font-weight: 500 !important;
         }
@@ -177,6 +170,18 @@
             vertical-align: middle;
             padding: 10px 12px;
             border-bottom: 2px solid #d0e0f5;
+            border-collapse: collapse;
+        }
+
+        /* Prevent wrapping */
+        table.dataTable thead th,
+        table.dataTable tbody td {
+            white-space: nowrap;
+        }
+
+        /* Ensure wrapper stretches */
+        table.dataTable {
+            width: 100% !important;
         }
     </style>
 

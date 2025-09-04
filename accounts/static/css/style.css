@@ -352,9 +352,13 @@ body {
 
 /* DataTable Styles */
 .table-container {
-  overflow-x: auto;
+  /* overflow-x: auto; */
   border: 1px solid var(--card-border);
   border-radius: var(--border-radius);
+}
+
+.dataTables_scroll {
+  overflow-x: auto;
 }
 
 #casesTable {

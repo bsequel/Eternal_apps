@@ -122,54 +122,80 @@ def home(request):
 import logging
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
-from .services import process_gmail_pdfs
+# from .services import process_gmail_pdfs
+from .services import check_unread_mails,main
 
 logger = logging.getLogger(__name__)
 
+
+
+
 @login_required
 def run_pdf_etl(request):
-    username = request.user.username if request.user.is_authenticated else None
 
-    try:
-        # process_gmail_pdfs(updated_by_username=username)
-        process_gmail_pdfs()
+    count = check_unread_mails()
+    if count == 0:
+        print("📭 No unread mails")
         return JsonResponse({
             "status": "success",
-            "message": "PDFs processed successfully."
+            "message": "No unread mails."
+        }, status=200)
+    else:
+        print(f"📧 You have {count} unread mails")
+        main()
+        return JsonResponse({
+            "status": "success",
+            "message": "Processed successfully."
         }, status=200)
 
-    except FileNotFoundError as e:
-        logger.error(f"Missing file error while processing PDFs: {e}")
-        return JsonResponse({
-            "status": "error",
-            "error_type": "FileNotFoundError",
-            "message": str(e)
-        }, status=400)
+    
+    
 
-    except PermissionError as e:
-        logger.error(f"Permission error while processing PDFs: {e}")
-        return JsonResponse({
-            "status": "error",
-            "error_type": "PermissionError",
-            "message": "Permission denied while accessing PDF files."
-        }, status=403)
 
-    except ValueError as e:
-        logger.error(f"Value error while processing PDFs: {e}")
-        return JsonResponse({
-            "status": "error",
-            "error_type": "ValueError",
-            "message": str(e)
-        }, status=400)
+# @login_required
+# def run_pdf_etl(request):
+#     username = request.user.username if request.user.is_authenticated else None
 
-    except Exception as e:
-        logger.exception("Unexpected error while processing PDFs")
-        return JsonResponse({
-            "status": "error",
-            "error_type": "Exception",
-            "message": "An unexpected error occurred while processing PDFs.",
-            "details": str(e)
-        }, status=500)
+#     try:
+#         # process_gmail_pdfs(updated_by_username=username)
+#         process_gmail_pdfs()
+#         return JsonResponse({
+#             "status": "success",
+#             "message": "PDFs processed successfully."
+#         }, status=200)
+
+#     except FileNotFoundError as e:
+#         logger.error(f"Missing file error while processing PDFs: {e}")
+#         return JsonResponse({
+#             "status": "error",
+#             "error_type": "FileNotFoundError",
+#             "message": str(e)
+#         }, status=400)
+
+#     except PermissionError as e:
+#         logger.error(f"Permission error while processing PDFs: {e}")
+#         return JsonResponse({
+#             "status": "error",
+#             "error_type": "PermissionError",
+#             "message": "Permission denied while accessing PDF files."
+#         }, status=403)
+
+#     except ValueError as e:
+#         logger.error(f"Value error while processing PDFs: {e}")
+#         return JsonResponse({
+#             "status": "error",
+#             "error_type": "ValueError",
+#             "message": str(e)
+#         }, status=400)
+
+#     except Exception as e:
+#         logger.exception("Unexpected error while processing PDFs")
+#         return JsonResponse({
+#             "status": "error",
+#             "error_type": "Exception",
+#             "message": "An unexpected error occurred while processing PDFs.",
+#             "details": str(e)
+#         }, status=500)
 
 
 
@@ -300,6 +326,12 @@ def cases_api(request):
     total_amount = 0
 
     for c in cases_qs:
+        from zoneinfo import ZoneInfo
+
+        updated_on_ist = c.updated_on.astimezone(ZoneInfo("Asia/Kolkata"))
+        formatted_time = updated_on_ist.strftime('%d-%m-%Y %I:%M:%S %p')
+
+
         fraud_amt_str = c.total_fraudulent_amount.replace(
             '₹', '').replace(',', '')
         try:
@@ -328,7 +360,8 @@ def cases_api(request):
             'utr_amount': format_indian_number(c.utr_amount),
             'transaction_datetime': c.transaction_datetime,
             'total_fraudulent_amount': format_indian_number(c.total_fraudulent_amount),
-            'updated_on': c.updated_on.strftime('%d-%m-%Y %H:%M:%S'),
+            # 'updated_on': c.updated_on.strftime('%d-%m-%Y %H:%M:%S'),
+            'updated_on': formatted_time,
             'updated_by': str(c.updated_by) if c.updated_by else '',
             "pdf_url": request.build_absolute_uri(c.pdf_file.url) if c.pdf_file else None,
             'lien_amount': format_indian_number(c.lien_amount) or 0,

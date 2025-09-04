@@ -141,6 +141,20 @@ class CamsPortfolio(models.Model):
         super().save(*args, **kwargs)
 
     
+# models.py
+class Scheme(models.Model):
+    isin = models.CharField(max_length=20)
+    scheme_name = models.CharField(max_length=255)
+
+    class Meta:
+        unique_together = ('isin', 'scheme_name')  # ensures pair is unique
+
+    def __str__(self):
+        return f"{self.scheme_name} ({self.isin})"
+
+
+
+
 
 # =======================     consolidated   ========================
 # =======================     consolidated   ========================

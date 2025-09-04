@@ -1234,16 +1234,17 @@ $(document).ready(function () {
             // ✅ Regex: exactly 16 alphanumeric characters (letters + numbers only)
             const utrRegex = /^[A-Za-z0-9]{16}$/;
 
-            if (newValue === "") {
-                showTooltip(inputField, "UTR Number cannot be empty!");
-                return;
-            }
+            // if (newValue === "") {
+            //     showTooltip(inputField, "UTR Number cannot be empty!");
+            //     return;
+            // }
 
-            if (!utrRegex.test(newValue)) {
-                showTooltip(inputField, "Must be exactly 16 alphanumeric characters.");
-                inputField.val(""); // clear invalid input
-                return;
-            }
+            // if (!utrRegex.test(newValue)) {
+            //     showTooltip(inputField, "Must be exactly 16 alphanumeric characters.");
+            //     inputField.val(""); // clear invalid input
+            //     return;
+            // }
+            // ------------------------------------------
 
             // if (confirm(`Update UTR Number to "${newValue}"?`)) {
             //     sendCaseUpdate(caseId, { utr_number: newValue });
@@ -2710,276 +2711,243 @@ $(document).ready(function () {
         }, 30000); // every 30s
     }
 
-    function bindFilterEvents() {
-        $('#apply-filters').on('click', function (e) {
-            e.preventDefault();
-            applyFilters();
+function bindFilterEvents() {
+    $('#apply-filters1').on('click', function (e) {
+        e.preventDefault();
+        applyFilters();
+    });
+
+    $('#reset-filters1').on('click', function (e) {
+        e.preventDefault();
+        resetFilters();
+    });
+}
+
+/**
+ * Parse dates from different formats into a Date object.
+ * Handles: dd-mm-yyyy, dd-mm-yyyy HH:mm:ss, yyyy-mm-dd, yyyy-mm-ddTHH:mm:ss
+ */
+function parseCustomDate(dateStr) {
+    if (!dateStr) return null;
+
+    // If already valid ISO
+    const isoTest = Date.parse(dateStr);
+    if (!isNaN(isoTest)) return new Date(isoTest);
+
+    // Handle dd-mm-yyyy or dd-mm-yyyy HH:mm:ss
+    const parts = dateStr.trim().split(" ");
+    const datePart = parts[0]?.split("-");
+
+    if (!datePart || datePart.length < 3) return null;
+
+    let [day, month, year] = datePart.map(Number);
+    if (year < 1000 || month < 1 || day < 1) return null;
+
+    let timePart = parts[1] || "00:00:00"; // default midnight
+    if (timePart.length === 5) timePart += ":00"; // HH:mm → HH:mm:ss
+
+    return new Date(
+        `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}T${timePart}`
+    );
+}
+
+function fetchCases() {
+    fetch('/cyberapp/cases/')
+        .then(res => {
+            if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+            return res.json();
+        })
+        .then(data => {
+            allCases = data.cases || [];
+            renderTable(allCases);
+        })
+        .catch(err => {
+            console.error('Error loading data:', err);
+            showToast('Failed to load cases data', 'error');
         });
+}
 
-        $('#reset-filters').on('click', function (e) {
-            e.preventDefault();
-            resetFilters();
-        });
-    }
+function addRowToTable(c) {
+    table.row.add([
+        c.sno,
+        c.complaint_date,
+        c.mail_date,
+        c.mail_month,
+        c.amount,
+        c.reference_number,
+        c.police_station_address,
+        c.account_number,
+        c.name,
+        c.mobile_number,
+        c.email_id,
+        c.status,
+        c.ageing_days,
+        c.debit_from_bank,
+        c.region,
+        c.utr_number,
+        c.utr_amount,
+        c.transaction_datetime,
+        c.total_fraudulent_amount,
+        c.updated_on,
+        c.updated_by,
+        c.pdf_url,
+        c.lien_amount,
+        c.remarks,
+    ]);
+}
 
-    function fetchCases() {
-        fetch('/cyberapp/cases/')
-            .then(res => {
-                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-                return res.json();
-            })
-            .then(data => {
-                allCases = data.cases || [];
-                renderTable(allCases);
-            })
-            .catch(err => {
-                console.error('Error loading data:', err);
-                showToast('Failed to load cases data', 'error');
-            });
-    }
+function renderTable(data) {
+    table.clear();
+    data.forEach(addRowToTable);
+    table.draw(false);
+    updateDashboardCards(data);
+}
 
-    function renderTable(data) {
-        table.clear();
+function applyFilters() {
+    const filterType = $('#date-filter-type').val();
+    const startDate = parseCustomDate($('#start-date').val());
+    const endDate = parseCustomDate($('#end-date').val());
+    const status = $('#status-filter').val().toLowerCase();
+    const account = $('#account-filter').val().toLowerCase();
+    const reference = $('#reference-filter').val().toLowerCase();
 
-        data.forEach(c => {
-            table.row.add([
-                c.sno,
-                c.complaint_date,
-                c.mail_date,
-                c.mail_month,
-                c.amount,
-                c.reference_number,
-                c.police_station_address,
-                c.account_number,
-                c.name,
-                c.mobile_number,
-                c.email_id,
-                c.status,
-                c.ageing_days,
-                c.debit_from_bank,
-                c.region,
-                c.utr_number,
-                c.utr_amount,
-                c.transaction_datetime,
-                c.total_fraudulent_amount,
-                c.updated_on,
-                c.updated_by,
-                c.pdf_url,
-                c.lien_amount,
-                c.remarks,
-            ]);
-        });
+    const filtered = allCases.filter(c => {
+        let valid = true;
+        const caseDate = parseCustomDate(c[filterType]);
 
-        table.draw(false);
-        updateDashboardCards(data);
-    }
+        if (startDate && caseDate) valid = valid && caseDate >= startDate;
+        if (endDate && caseDate) valid = valid && caseDate <= endDate;
+        if (status) valid = valid && String(c.status).toLowerCase() === status;
+        if (account) valid = valid && String(c.account_number || '').toLowerCase().includes(account);
+        if (reference) valid = valid && String(c.reference_number || '').toLowerCase().includes(reference);
 
-    function applyFilters() {
-        const filterType = $('#date-filter-type').val();
-        const startDate = $('#start-date').val();
-        const endDate = $('#end-date').val();
-        const status = $('#status-filter').val().toLowerCase();
-        const account = $('#account-filter').val().toLowerCase();
-        const reference = $('#reference-filter').val().toLowerCase();
-        const month = $('#month-filter').val().toLowerCase();
+        return valid;
+    });
 
-        const filtered = allCases.filter(c => {
-            let valid = true;
-            if (startDate) valid = valid && c[filterType] >= startDate;
-            if (endDate) valid = valid && c[filterType] <= endDate;
-            if (status) valid = valid && String(c.status).toLowerCase() === status;
-            if (account) valid = valid && String(c.account_number || '').toLowerCase().includes(account);
-            if (reference) valid = valid && String(c.reference_number || '').toLowerCase().includes(reference);
-            if (month) valid = valid && String(c.mail_month || '').toLowerCase() === month;
-            return valid;
-        });
+    renderTable(filtered);
+}
 
-        renderTable(filtered);
-    }
+function resetFilters() {
+    $('#date-filter-type').val('mail_date');
+    $('#start-date').val('');
+    $('#end-date').val('');
+    $('#status-filter').val('');
+    $('#account-filter').val('');
+    $('#reference-filter').val('');
+    renderTable(allCases);
+}
 
-    function resetFilters() {
-        $('#date-filter-type').val('mail_date');
-        $('#start-date').val('');
-        $('#end-date').val('');
-        $('#status-filter').val('');
-        $('#account-filter').val('');
-        $('#reference-filter').val('');
-        $('#month-filter').val('');
-        renderTable(allCases);
-    }
-    function updateDashboardCards(data) {
-        let total = data.length;
-        let pending = 0, picked = 0, closed = 0;
-        let totalFraud = 0;
-        let totalLien = 0;
-        let totalAmount = 0;
+function calculateDashboardStats(cases) {
+    let stats = { total: cases.length, pending: 0, picked: 0, closed: 0, totalFraud: 0, totalLien: 0, totalAmount: 0 };
 
-        data.forEach(c => {
-            const status = c.status;
-            const fraudAmount = parseFloat(String(c.total_fraudulent_amount || '0').replace(/[₹,]/g, '')) || 0;
-            const lienAmount = parseFloat(String(c.lien_amount || '0').replace(/[₹,]/g, '')) || 0;
-            const caseAmount = parseFloat(String(c.amount || '0').replace(/[₹,]/g, '')) || 0;
+    cases.forEach(c => {
+        const status = String(c.status || '').toLowerCase();
+        const fraudAmount = parseFloat(String(c.total_fraudulent_amount || '0').replace(/[₹,]/g, '')) || 0;
+        const lienAmount = parseFloat(String(c.lien_amount || '0').replace(/[₹,]/g, '')) || 0;
+        const caseAmount = parseFloat(String(c.amount || '0').replace(/[₹,]/g, '')) || 0;
 
-            if (status === 'Pending') pending++;
-            else if (status === 'Picked') picked++;
-            else if (status === 'Closed') closed++;
+        if (status === 'pending') stats.pending++;
+        else if (status === 'picked') stats.picked++;
+        else if (status === 'closed') stats.closed++;
 
-            totalFraud += fraudAmount;
-            totalLien += lienAmount;
-            totalAmount += caseAmount;
-        });
+        stats.totalFraud += fraudAmount;
+        stats.totalLien += lienAmount;
+        stats.totalAmount += caseAmount;
+    });
 
-        // Existing cards
-        $('#card-total-cases').text(total);
-        $('#card-pending').text(pending);
-        $('#card-picked').text(picked);
-        $('#card-closed').text(closed);
+    return stats;
+}
 
-        // Fraud amount formatting
-        if (totalFraud >= 10000000) {
-            $('#card-fraud-amount').text(formatToCrore(totalFraud));
-        } else {
-            $('#card-fraud-amount').text(formatINR(totalFraud));
-        }
+function updateDashboardCards(data) {
+    const stats = calculateDashboardStats(data);
 
-        // New cards
-        $('#card-lien-amount').text(formatINR(totalLien));
-        $('#card-total-amount').text(formatINR(totalAmount));
-    }
+    $('#card-total-cases').text(stats.total);
+    $('#card-pending').text(stats.pending);
+    $('#card-picked').text(stats.picked);
+    $('#card-closed').text(stats.closed);
 
-    function updateCardsFromTable() {
-        const filteredData = table.rows({ search: 'applied' }).data().toArray();
+    $('#card-fraud-amount').text(
+        stats.totalFraud >= 10000000 ? formatToCrore(stats.totalFraud) : formatINR(stats.totalFraud)
+    );
+    $('#card-lien-amount').text(formatINR(stats.totalLien));
+    $('#card-total-amount').text(formatINR(stats.totalAmount));
+}
 
-        let total = filteredData.length;
-        let pending = 0, picked = 0, closed = 0;
-        let totalFraud = 0;
-        let totalLien = 0;
-        let totalAmount = 0;
+function updateCardsFromTable() {
+    const filteredData = table.rows({ search: 'applied' }).data().toArray();
+    const mappedCases = filteredData.map(row => ({
+        status: row[11],
+        total_fraudulent_amount: row[18],
+        lien_amount: row[22],
+        amount: row[4]
+    }));
 
-        filteredData.forEach(row => {
-            const status = row[11]?.toString().trim();
-            const fraudAmount = parseFloat(String(row[18] || '0').replace(/[₹,]/g, '')) || 0;
-            const lienAmount = parseFloat(String(row[22] || '0').replace(/[₹,]/g, '')) || 0; // ✅ new col
-            const caseAmount = parseFloat(String(row[4] || '0').replace(/[₹,]/g, '')) || 0;  // ✅ amount col
+    updateDashboardCards(mappedCases);
+}
 
-            if (status === 'Pending') pending++;
-            else if (status === 'Picked') picked++;
-            else if (status === 'Closed') closed++;
+function refreshTableData() {
+    console.log('🔄 Refreshing table data...');
 
-            totalFraud += fraudAmount;
-            totalLien += lienAmount;
-            totalAmount += caseAmount;
-        });
+    fetch('/cyberapp/cases/')
+        .then(res => {
+            if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+            return res.json();
+        })
+        .then(data => {
+            allCases = data.cases || [];
 
-        $('#card-total-cases').text(total);
-        $('#card-pending').text(pending);
-        $('#card-picked').text(picked);
-        $('#card-closed').text(closed);
+            const currentSearch = table.search();
+            const currentPage = table.page();
 
-        if (totalFraud >= 10000000) {
-            $('#card-fraud-amount').text(formatToCrore(totalFraud));
-        } else {
-            $('#card-fraud-amount').text(formatINR(totalFraud));
-        }
+            table.clear();
+            allCases.forEach(addRowToTable);
 
-        $('#card-lien-amount').text(formatINR(totalLien));
-        $('#card-total-amount').text(formatINR(totalAmount));
-    }
+            table.search(currentSearch).draw(false);
 
-    function refreshTableData() {
-        console.log('🔄 Refreshing table data...');
-
-        fetch('/cyberapp/cases/')
-            .then(res => {
-                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-                return res.json();
-            })
-            .then(data => {
-                allCases = data.cases || [];
-
-                const currentSearch = table.search();
-                const currentPage = table.page();
-
-                table.clear();
-
-                allCases.forEach(c => {
-                    table.row.add([
-                        c.sno,
-                        c.complaint_date,
-                        c.mail_date,
-                        c.mail_month,
-                        c.amount,
-                        c.reference_number,
-                        c.police_station_address,
-                        c.account_number,
-                        c.name,
-                        c.mobile_number,
-                        c.email_id,
-                        c.status,
-                        c.ageing_days,
-                        c.debit_from_bank,
-                        c.region,
-                        c.utr_number,
-                        c.utr_amount,
-                        c.transaction_datetime,
-                        c.total_fraudulent_amount,
-                        c.updated_on,
-                        c.updated_by,
-                        c.pdf_url,
-                        c.lien_amount,
-                        c.remarks,
-                    ]);
-                });
-
-                table.search(currentSearch);
-                table.draw(false);
-
-                if (currentPage < table.page.info().pages) {
-                    table.page(currentPage).draw(false);
-                }
-
-                updateDashboardCards(allCases);
-
-                console.log('✅ Table refreshed successfully');
-            })
-            .catch(err => {
-                console.error('❌ Error refreshing data:', err);
-                showToast('Failed to refresh table data', 'error');
-            });
-    }
-
-    function initRefreshFunctionality() {
-        setTimeout(() => {
-            let targetTableWrapper;
-
-            if (role === 'viewer') {
-                targetTableWrapper = $('#casesTable1_wrapper .dt-buttons');
-            } else {
-                targetTableWrapper = $('#casesTable_wrapper .dt-buttons');
+            const pages = table.page.info().pages;
+            if (currentPage < pages) {
+                table.page(currentPage).draw(false);
+            } else if (pages > 0) {
+                table.page(pages - 1).draw(false);
             }
 
-            if (targetTableWrapper.length > 0 && $('#manualRefreshBtn').length === 0) {
-                targetTableWrapper.append(`
-                    <button id="manualRefreshBtn" class="btn btn-dark btn-sm ms-2" title="Refresh Data">
-                        <i class="bi bi-arrow-clockwise"></i> Refresh
-                    </button>
-                `);
+            updateDashboardCards(allCases);
+            console.log('✅ Table refreshed successfully');
+        })
+        .catch(err => {
+            console.error('❌ Error refreshing data:', err);
+            showToast('Failed to refresh table data', 'error');
+        });
+}
 
-                $('#manualRefreshBtn').on('click', function () {
-                    const btn = $(this);
-                    btn.prop('disabled', true).html('<i class="bi bi-arrow-clockwise"></i> Refreshing...');
+function initRefreshFunctionality() {
+    setTimeout(() => {
+        let targetTableWrapper = role === 'viewer'
+            ? $('#casesTable1_wrapper .dt-buttons')
+            : $('#casesTable_wrapper .dt-buttons');
 
-                    refreshTableData();
+        if (targetTableWrapper.length > 0 && $('#manualRefreshBtn').length === 0) {
+            targetTableWrapper.append(`
+                <button id="manualRefreshBtn" class="btn btn-dark btn-sm ms-2" title="Refresh Data">
+                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                </button>
+            `);
 
-                    setTimeout(() => {
-                        btn.prop('disabled', false).html('<i class="bi bi-arrow-clockwise"></i> Refresh');
-                    }, 1000);
-                });
-            }
-        }, 500);
+            $('#manualRefreshBtn').on('click', function () {
+                const btn = $(this);
+                btn.prop('disabled', true).html('<i class="bi bi-arrow-clockwise"></i> Refreshing...');
+                refreshTableData();
+                setTimeout(() => {
+                    btn.prop('disabled', false).html('<i class="bi bi-arrow-clockwise"></i> Refresh');
+                }, 1000);
+            });
+        }
+    }, 500);
 
-        console.log('✅ Refresh functionality initialized');
-    }
+    console.log('✅ Refresh functionality initialized');
+}
+
+
 
     function showToast(message, type = 'success') {
         const toastId = 'toast-' + Date.now();

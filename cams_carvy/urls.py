@@ -23,6 +23,12 @@ urlpatterns = [
     path('download-previous/', views.download_previous_month,
          name='download_previous'),
 
+
+     #  isin  scheme mapping
+      path('ajax/upload-mapping/', views.ajax_upload_mapping, name='ajax_upload_mapping'),
+    path('ajax/map-isin/', views.ajax_map_isin, name='ajax_map_isin'),
+          
+
 ]
 
 
